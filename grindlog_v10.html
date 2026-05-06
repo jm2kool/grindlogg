@@ -1,0 +1,2647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="GrindLog"/>
+<meta name="theme-color" content="#000"/>
+<title>GrindLog v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --g:#6ee7b7; --gd:#34d399; --bg:#000; --s1:#0d0d0d; --s2:#161616; --b1:#1e1e1e; --b2:#2a2a2a;
+  --t1:#ffffff; --t2:#aaaaaa; --t3:#555555; --t4:#2e2e2e;
+  --red:#f87171; --amber:#fbbf24; --xp:#a78bfa; --xpd:#7c3aed;
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+  --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--bg);color:var(--t2);font-family:'DM Mono',monospace;overscroll-behavior:none;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;background:var(--bg);position:relative;overflow:hidden}
+
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--t1);letter-spacing:-.5px}
+.logo em{color:var(--g);font-style:normal}
+.hdr-right{display:flex;align-items:center;gap:6px}
+.streak-n{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--g);line-height:1}
+.streak-info{display:flex;flex-direction:column;gap:1px}
+.streak-lbl{font-size:8px;color:var(--t3);letter-spacing:1px}
+.streak-fire{font-size:13px}
+
+.xp-icon{font-size:12px}
+.xp-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--xp)}
+.xp-lbl{font-size:8px;color:#7c5fba;letter-spacing:.5px}
+
+/* level bar */
+.level-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.level-badge{background:linear-gradient(135deg,var(--xp),var(--xpd));color:#fff;font-family:'Syne',sans-serif;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.level-bar-wrap{flex:1;height:3px;background:var(--b1);border-radius:2px}
+.level-bar-fill{height:100%;background:linear-gradient(90deg,var(--xp),#c084fc);border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.level-xp-txt{font-size:8px;color:#7c5fba;white-space:nowrap}
+
+.wk-progress{display:flex;align-items:center;gap:8px}
+.wk-lbl{font-size:9px;color:var(--t3);letter-spacing:.5px;white-space:nowrap}
+.wk-bar-wrap{flex:1;height:3px;background:var(--b1);border-radius:2px}
+.wk-bar-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--gd));border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.wk-val{font-size:9px;color:var(--g);letter-spacing:.5px;white-space:nowrap;font-family:'Syne',sans-serif;font-weight:700}
+
+/* ── NAV TABS — Liquid Glass ── */
+.tabs{
+  display:flex;
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  margin:8px 12px 4px;
+  padding:4px;
+  flex-shrink:0;
+  gap:2px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.tab{
+  flex:1;padding:10px 0 8px;font-size:9px;letter-spacing:1px;font-family:'DM Mono',monospace;
+  background:none;border:none;color:var(--t3);cursor:pointer;
+  transition:all .2s cubic-bezier(.4,0,.2,1);border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.tab-icon{font-size:16px;line-height:1;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.tab.on{
+  background:rgba(110,231,183,0.12);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:var(--g);
+  box-shadow:0 1px 8px rgba(110,231,183,0.15),inset 0 1px 0 rgba(110,231,183,0.2);
+  border:1px solid rgba(110,231,183,0.2);
+}
+.tab.on .tab-icon{transform:scale(1.15)}
+
+/* ── LIQUID GLASS GLOBALS ── */
+.hdr{
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(30px) saturate(160%);
+  -webkit-backdrop-filter:blur(30px) saturate(160%);
+  padding-top:calc(var(--st) + 8px);padding-left:16px;padding-right:16px;padding-bottom:10px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 1px 0 rgba(255,255,255,0.04);
+}
+.day-card{
+  display:flex;flex-direction:column;gap:0;padding:14px 16px;margin-bottom:6px;
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--r);cursor:pointer;
+  transition:background .12s,border-color .12s,box-shadow .12s;
+  -webkit-user-select:none;user-select:none;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.day-card:active{background:rgba(255,255,255,0.06)}
+.day-card.today{
+  background:rgba(110,231,183,0.05);
+  border-color:rgba(110,231,183,0.2);
+  box-shadow:0 0 20px rgba(110,231,183,0.06),inset 0 1px 0 rgba(110,231,183,0.1);
+}
+.day-card.is-rest{opacity:.35;cursor:default;pointer-events:none}
+.day-card.is-rest-swap{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.05)}
+.card{
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--r);padding:16px;margin-bottom:8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.total-card{
+  background:rgba(110,231,183,0.04);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(110,231,183,0.15);
+  border-radius:var(--r);padding:16px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 0 16px rgba(110,231,183,0.04);
+}
+.sheet{
+  background:rgba(16,16,18,0.85);
+  backdrop-filter:blur(40px) saturate(180%);
+  -webkit-backdrop-filter:blur(40px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.1);
+  border-top:1px solid rgba(255,255,255,0.14);
+  border-radius:22px 22px 0 0;width:100%;max-width:430px;max-height:92dvh;overflow-y:auto;padding:0 0 calc(var(--sb) + 8px);
+  box-shadow:0 -4px 40px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.xp-pill{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(26,15,46,0.7);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(167,139,250,0.25);
+  padding:5px 10px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(167,139,250,0.1);
+}
+.streak-pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.1);
+  padding:5px 10px;border-radius:20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.sc{
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--r);padding:18px 14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.shop-item{
+  display:flex;align-items:center;gap:14px;padding:16px;
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--r);margin-bottom:8px;transition:all .15s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.shop-item:active{background:rgba(255,255,255,0.06)}
+.walk-toggle{
+  display:flex;align-items:center;gap:14px;padding:16px;
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--r);cursor:pointer;margin-bottom:8px;transition:all .15s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.walk-toggle.on{
+  background:rgba(110,231,183,0.05);
+  border-color:rgba(110,231,183,0.2);
+  box-shadow:0 0 16px rgba(110,231,183,0.05),inset 0 1px 0 rgba(110,231,183,0.1);
+}
+.tip{
+  background:rgba(110,231,183,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(110,231,183,0.12);border-radius:var(--r);padding:16px;margin-top:12px;
+}
+.wc{
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:10px;
+}
+
+/* ── APPLE WATCH RINGS ── */
+.watch-rings-wrap{
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.08);border-radius:18px;
+  padding:20px 16px 16px;margin-bottom:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.watch-rings-inner{display:flex;align-items:center;justify-content:center;gap:20px}
+.ring-svg-wrap{position:relative;flex-shrink:0}
+.ring-center-inputs{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;text-align:center;}
+.ring-labels{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ring-label-row{display:flex;align-items:center;gap:8px;cursor:pointer}
+.ring-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ring-label-text{display:flex;flex-direction:column}
+.ring-label-name{font-size:9px;letter-spacing:1px;color:var(--t3)}
+.ring-label-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;line-height:1.1}
+.ring-label-unit{font-size:9px;color:var(--t3)}
+.wm-input{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+  background:transparent;border:none;outline:none;width:54px;text-align:center;
+  -moz-appearance:textfield;
+}
+.wm-input::-webkit-inner-spin-button,.wm-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.wm-input.move-inp{color:#ff375f}
+.wm-input.exercise-inp{color:#92f442}
+.wm-input.stand-inp{color:#1ac8ff}
+.ring-input-unit{font-size:8px;color:var(--t3);letter-spacing:.5px}
+
+/* ── SCROLL AREA ── */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(var(--sb) + 24px);min-height:0}
+
+/* ── WEEK VIEW ── */
+.wk-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.wk-nav-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--t2);letter-spacing:.5px}
+.wk-nav-date{font-size:9px;color:var(--t3);margin-top:1px;letter-spacing:.3px}
+.nav-arr{background:none;border:1px solid var(--b1);color:var(--t3);width:36px;height:36px;border-radius:10px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.nav-arr:active{background:var(--s2);color:var(--t2)}
+.nav-arr.dim{color:var(--b2);border-color:var(--b1);cursor:default}
+
+.day-card-top{display:flex;align-items:center;gap:14px}
+.day-em{font-size:24px;width:32px;text-align:center;flex-shrink:0}
+.day-body{flex:1;min-width:0}
+.day-top{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.day-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--t2)}
+.day-card.today .day-name{color:var(--g)}
+.pill{font-size:8px;padding:2px 7px;border-radius:5px;font-weight:700;letter-spacing:.8px}
+.pill-today{background:var(--g);color:#000}
+.pill-rest{background:var(--b2);color:var(--t3)}
+.pill-done{background:#071510;color:var(--g);border:1px solid #1a3828}
+.day-sub{font-size:11px;color:var(--t3)}
+.day-kcal{font-size:10px;color:#2d7a52;margin-top:2px}
+.mini-prog{width:100%;height:2px;background:var(--b1);border-radius:2px;margin-top:8px;overflow:hidden}
+.mini-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--g),var(--gd));transition:width .3s}
+.day-right{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--t3);flex-shrink:0}
+.day-right.g{color:var(--g)}
+
+/* ── EFFORT BARS (triangle style) ── */
+.effort-bars-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)}
+.effort-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.effort-lbl{font-size:9px;color:var(--t3);letter-spacing:1px}
+.effort-val-lbl{font-size:10px;font-weight:700;font-family:'Syne',sans-serif}
+.effort-bars{display:flex;align-items:flex-end;gap:4px;height:44px;touch-action:none;cursor:pointer}
+.effort-bar{flex:1;border-radius:6px 6px 4px 4px;transition:background .15s,height .15s;position:relative;min-height:8px}
+.effort-bar.active{box-shadow:0 0 8px rgba(255,255,255,.2)}
+
+/* effort color states */
+.effort-c1{background:linear-gradient(180deg,#22c55e,#16a34a)}
+.effort-c2{background:linear-gradient(180deg,#22c55e,#84cc16)}
+.effort-c3{background:linear-gradient(180deg,#84cc16,#eab308)}
+.effort-c4{background:linear-gradient(180deg,#eab308,#f97316)}
+.effort-c5{background:linear-gradient(180deg,#f97316,#ef4444)}
+
+/* ── LOG VIEW ── */
+.day-scroller{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:20px;scrollbar-width:none}
+.day-scroller::-webkit-scrollbar{display:none}
+.dtab{padding:9px 16px;border-radius:10px;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.8px;background:var(--s1);color:var(--t3);border:1px solid var(--b1);white-space:nowrap;cursor:pointer;transition:all .12s;-webkit-user-select:none;user-select:none}
+.dtab.on{background:var(--g);color:#000;font-weight:700;border-color:var(--g)}
+.dtab.done{color:var(--g);border-color:#1a3828;background:#071510}
+.dtab.tod{border-color:#1a3828}
+
+.log-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
+.log-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--t1);line-height:1.1}
+.log-complete-badge{background:#071510;border:1px solid #1a3828;color:var(--g);font-size:9px;padding:5px 10px;border-radius:8px;letter-spacing:1px;white-space:nowrap;margin-top:4px}
+
+.sec{font-size:9px;color:var(--t3);letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* ── START WORKOUT BUTTON ── */
+.start-workout-btn{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,var(--g),var(--gd));color:#000;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;border:none;cursor:pointer;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s;-webkit-user-select:none;user-select:none}
+.start-workout-btn:active{opacity:.85}
+.start-workout-btn .sw-icon{font-size:18px}
+
+/* ── EXERCISES ── */
+.ex-list{margin-bottom:8px}
+.ex-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;margin-bottom:4px;cursor:pointer;transition:background .1s;position:relative}
+.ex-item:active{background:rgba(255,255,255,.03)}
+.chk{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--b2);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.chk.on{background:var(--g);border-color:var(--g)}
+.chk.on::after{content:'✓';font-size:13px;font-weight:700;color:#000}
+.ex-label{flex:1;min-width:0}
+.ex-nm{font-size:15px;color:var(--t2);transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-nm.done{color:var(--t4);text-decoration:line-through}
+.ex-meta{display:flex;align-items:center;gap:6px;margin-top:2px}
+.ex-sets-lbl{font-size:10px;color:var(--t3)}
+.po-tag{font-size:9px;color:var(--g);background:#071510;border:1px solid #1a3828;padding:1px 6px;border-radius:4px;letter-spacing:.5px}
+.ex-btn{background:none;border:1px solid var(--b1);color:var(--t3);font-size:9px;padding:4px 9px;border-radius:7px;font-family:'DM Mono',monospace;cursor:pointer;flex-shrink:0;letter-spacing:.5px;transition:all .12s}
+.ex-btn:active{background:var(--s2)}
+
+.prog-track{height:2px;background:var(--b1);border-radius:2px;margin:-4px 0 16px}
+.prog-track-fill{height:100%;background:var(--g);border-radius:2px;transition:width .3s}
+
+.add-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;color:var(--t3);font-size:12px;letter-spacing:.5px;border:1px dashed var(--b2);margin-bottom:16px;transition:all .12s}
+.add-row:active{background:var(--s1)}
+.add-row-icon{width:22px;height:22px;border-radius:6px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t3)}
+
+/* ── WALK TOGGLE ── */
+.walk-icon{font-size:26px;flex-shrink:0}
+.walk-text{flex:1}
+.walk-title{font-size:14px;color:var(--t2);transition:color .15s}
+.walk-toggle.on .walk-title{color:var(--g)}
+.walk-hint{font-size:10px;color:var(--t3);margin-top:2px}
+.walk-toggle.on .walk-hint{color:#2d7a52}
+.walk-check{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.walk-toggle.on .walk-check{background:var(--g);border-color:var(--g)}
+.walk-toggle.on .walk-check::after{content:'✓';font-size:14px;font-weight:700;color:#000}
+
+.total-lbl{font-size:9px;color:#2d7a52;letter-spacing:1.5px}
+.card-row{display:flex;align-items:center;gap:12px}
+.card-lbl{font-size:10px;color:var(--t3);letter-spacing:.8px;flex:1}
+.card-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--g);text-align:right;background:transparent;border:none;outline:none;width:80px}
+.card-unit{font-size:11px;color:var(--t3)}
+.total-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--g)}
+.total-unit{font-size:11px;color:#2d7a52;margin-left:3px}
+.n-input{width:100%;font-size:13px;color:var(--t2);line-height:1.8;background:transparent;border:none;outline:none;font-family:'DM Mono',monospace;resize:none}
+.w-input{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--g);background:transparent;border:none;outline:none;width:100px;text-align:right}
+
+/* ── REST DAY BTN ── */
+.rest-btn{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:12px;cursor:pointer;border:1px solid var(--b1);background:transparent;color:var(--t3);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.5px;width:100%;margin-bottom:16px;transition:all .15s}
+.rest-btn:active{background:var(--s1)}
+.rest-btn.active-rest{border-color:#3a1515;background:#120505;color:var(--red)}
+.rest-btn-icon{font-size:16px}
+
+/* ── REST SCREEN ── */
+.rest-screen{text-align:center;padding:60px 20px 30px}
+.rest-em{font-size:56px;margin-bottom:12px}
+.rest-ttl{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--t3)}
+.rest-sub{font-size:12px;color:var(--t4);margin-top:8px;line-height:1.8}
+
+/* ── STATS ── */
+.stats-h{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--t1);margin-bottom:16px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sc-em{font-size:22px;margin-bottom:8px}
+.sc-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--g)}
+.sc-lbl{font-size:9px;color:var(--t3);margin-top:3px;letter-spacing:1px}
+.tip-h{font-size:10px;color:var(--g);letter-spacing:1px;margin-bottom:6px}
+.tip-b{font-size:12px;color:var(--t3);line-height:1.9}
+.tip-b em{color:var(--t2);font-style:normal}
+.wc-h{font-size:9px;color:var(--t3);letter-spacing:1.5px;margin-bottom:14px}
+.wc-foot{display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--t3)}
+.g{color:var(--g)}.r{color:var(--red)}
+.w-empty{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:28px;text-align:center;color:var(--t4);font-size:11px;letter-spacing:1px}
+
+/* ── SHOP ── */
+.shop-h{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--t1);margin-bottom:4px}
+.shop-sub{font-size:11px;color:var(--t3);margin-bottom:18px}
+.shop-bal{display:inline-flex;align-items:center;gap:6px;background:#1a0f2e;border:1px solid #3a2060;padding:8px 14px;border-radius:16px;margin-bottom:20px}
+.shop-bal-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--xp)}
+.shop-bal-lbl{font-size:10px;color:#7c5fba}
+.shop-item-em{font-size:28px;flex-shrink:0}
+.shop-item-body{flex:1;min-width:0}
+.shop-item-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--t1)}
+.shop-item-desc{font-size:10px;color:var(--t3);margin-top:2px}
+.shop-item-owned{font-size:10px;color:var(--g);margin-top:3px;letter-spacing:.5px}
+.shop-buy-btn{background:linear-gradient(135deg,var(--xp),var(--xpd));color:#fff;border:none;padding:9px 14px;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
+.shop-buy-btn:active{opacity:.8}
+.shop-buy-btn.cant{background:var(--b2);color:var(--t3);cursor:default}
+.shop-buy-btn.owned{background:#071510;border:1px solid #1a3828;color:var(--g)}
+.shop-add-btn{width:100%;padding:14px;border-radius:12px;background:transparent;border:1px dashed var(--b2);color:var(--t3);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.5px;cursor:pointer;margin-top:4px;transition:all .15s}
+.shop-add-btn:active{background:var(--s1)}
+.shop-owned-sec{margin-top:20px}
+.shop-owned-h{font-size:9px;color:var(--t3);letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.shop-owned-h::after{content:'';flex:1;height:1px;background:var(--b1)}
+.shop-owned-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#061510;border:1px solid #1a3828;border-radius:12px;margin-bottom:6px}
+.shop-owned-em{font-size:20px}
+.shop-owned-name{font-size:12px;color:var(--g);font-family:'Syne',sans-serif;font-weight:700}
+.shop-owned-date{font-size:9px;color:#2d7a52;margin-top:1px}
+
+/* ── BOTTOM SHEET / MODAL ── */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.sheet-handle{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:14px auto 18px}
+.sheet-inner{padding:0 20px 16px}
+.sheet-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--t1);margin-bottom:4px}
+.sheet-sub{font-size:10px;color:var(--t3);letter-spacing:1px;margin-bottom:20px}
+
+.f-label{font-size:9px;color:var(--t3);letter-spacing:1.5px;margin-bottom:6px;display:block}
+.f-input{width:100%;background:var(--s2);border:1px solid var(--b1);color:var(--t1);font-family:'DM Mono',monospace;font-size:14px;padding:12px 14px;border-radius:10px;outline:none;margin-bottom:14px;transition:border-color .12s}
+.f-input:focus{border-color:var(--b2)}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.f-row .f-input{margin-bottom:0}
+.f-half{display:flex;flex-direction:column}
+.set-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.set-r{display:flex;align-items:center;gap:10px}
+.set-r-lbl{font-size:10px;color:var(--t3);width:50px;flex-shrink:0}
+.set-r-in{flex:1;background:var(--s2);border:1px solid var(--b1);color:var(--g);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:9px 10px;border-radius:8px;outline:none;text-align:center;transition:border-color .12s}
+.set-r-in:focus{border-color:var(--g)}
+.po-in{border-color:#1a3828;color:var(--g)}
+.po-in:focus{border-color:var(--g)}
+
+.scope{display:flex;background:var(--s2);border:1px solid var(--b1);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.scope-opt{flex:1;padding:10px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.5px;cursor:pointer;background:transparent;color:var(--t3);border:none;transition:all .12s}
+.scope-opt.on{background:var(--g);color:#000;font-weight:700}
+
+.sb{width:100%;padding:15px;border-radius:12px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;cursor:pointer;border:none;margin-bottom:8px;transition:opacity .15s;font-weight:700}
+.sb.prim{background:var(--g);color:#000}
+.sb.prim:active{opacity:.8}
+.sb.sec{background:var(--s2);color:var(--t3);border:1px solid var(--b1)}
+.sb.sec:active{opacity:.7}
+.sb.del{background:#120505;color:var(--red);border:1px solid #3a1515}
+.sb.del:active{opacity:.8}
+
+.day-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.dpick{padding:12px 8px;border-radius:10px;background:var(--s2);border:1px solid var(--b1);color:var(--t2);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-align:center;transition:all .12s}
+.dpick:active{background:var(--b1)}
+.dpick.off{opacity:.25;pointer-events:none}
+
+.po-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;border:1px solid var(--b1);background:var(--s2);cursor:pointer;margin-bottom:14px;transition:all .12s}
+.po-toggle.on{border-color:#1a3828;background:#061510}
+.po-toggle-lbl{font-size:11px;color:var(--t2);display:flex;align-items:center;gap:8px}
+.po-toggle.on .po-toggle-lbl{color:var(--g)}
+.po-switch{width:34px;height:20px;border-radius:10px;background:var(--b2);position:relative;transition:background .15s;flex-shrink:0}
+.po-toggle.on .po-switch{background:var(--g)}
+.po-switch::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:7px;background:#fff;transition:transform .15s}
+.po-toggle.on .po-switch::after{transform:translateX(14px)}
+
+/* ═══════════════════════════
+   ACTIVE WORKOUT OVERLAY
+═══════════════════════════ */
+#workoutOverlay{
+  position:fixed;inset:0;background:#000;z-index:300;
+  display:none;flex-direction:column;max-width:430px;margin:0 auto;
+  overflow:hidden;
+}
+#workoutOverlay.active{display:flex}
+
+.wo-hdr{padding:calc(var(--st) + 16px) 20px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b1);flex-shrink:0}
+.wo-hdr-left{display:flex;flex-direction:column;gap:2px}
+.wo-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--t1)}
+.wo-timer{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--g);letter-spacing:1px}
+.wo-end-btn{background:var(--red);color:#fff;border:none;padding:10px 18px;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px}
+
+.wo-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px calc(var(--sb) + 16px)}
+
+/* progress bar at top */
+.wo-prog-bar{height:3px;background:var(--b1);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.wo-prog-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--gd));border-radius:2px;transition:width .3s}
+
+/* exercise card in active mode */
+.wo-ex-card{background:var(--s1);border:1px solid var(--b1);border-radius:18px;margin-bottom:12px;overflow:hidden;transition:all .3s}
+.wo-ex-card.active-ex{border-color:var(--g);background:#061510}
+.wo-ex-card.done-ex{opacity:.5}
+
+.wo-ex-top{display:flex;align-items:center;gap:12px;padding:16px 16px 12px}
+.wo-ex-num{width:28px;height:28px;border-radius:8px;background:var(--b2);display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Syne',sans-serif;font-weight:800;color:var(--t3);flex-shrink:0}
+.wo-ex-card.active-ex .wo-ex-num{background:var(--g);color:#000}
+.wo-ex-card.done-ex .wo-ex-num{background:#071510;color:var(--g)}
+.wo-ex-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--t1);flex:1}
+.wo-ex-status{font-size:11px;color:var(--t3)}
+.wo-ex-card.done-ex .wo-ex-status{color:var(--g)}
+
+/* sets inside active card */
+.wo-sets{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
+.wo-set-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:10px;border:1px solid var(--b1)}
+.wo-set-row.active-set{border-color:var(--gd);background:#0a1f16}
+.wo-set-row.done-set{opacity:.5}
+.wo-set-lbl{font-size:10px;color:var(--t3);width:40px;flex-shrink:0;letter-spacing:.5px}
+.wo-set-row.active-set .wo-set-lbl{color:var(--g)}
+.wo-set-target{font-size:11px;color:var(--t3);flex:1}
+
+/* rep input in set */
+.wo-rep-input{width:56px;background:var(--s1);border:1px solid var(--b2);color:var(--t1);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;padding:6px 8px;border-radius:8px;outline:none;text-align:center;transition:border-color .12s}
+.wo-rep-input:focus{border-color:var(--g)}
+.wo-set-row.active-set .wo-rep-input{border-color:var(--gd)}
+
+/* set timer */
+.wo-set-timer{font-size:10px;font-family:'Syne',sans-serif;font-weight:700;min-width:36px;text-align:center}
+.wo-set-timer.running{color:var(--amber)}
+.wo-set-timer.done{color:var(--g)}
+
+/* set check/done button */
+.wo-set-done-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--b2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s;font-size:14px;color:var(--t3)}
+.wo-set-done-btn.done{background:var(--g);border-color:var(--g);color:#000}
+.wo-set-done-btn:active{opacity:.7}
+
+/* rest timer banner */
+.rest-banner{background:#0d1a0a;border:1px solid #1a4025;border-radius:14px;padding:14px 16px;margin:4px 16px 12px;display:flex;align-items:center;gap:12px}
+.rest-timer-circle{width:44px;height:44px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center}
+.rest-timer-circle svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.rest-timer-num{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--g);z-index:1}
+.rest-info{flex:1}
+.rest-title{font-size:12px;color:var(--g);font-family:'Syne',sans-serif;font-weight:700}
+.rest-sub-lbl{font-size:10px;color:#2d7a52;margin-top:2px}
+.rest-skip-btn{background:#1a4025;border:1px solid #2d7a52;color:var(--g);font-size:10px;padding:8px 12px;border-radius:8px;font-family:'DM Mono',monospace;cursor:pointer;letter-spacing:.5px;white-space:nowrap}
+
+/* ═══════════════════════════
+   WORKOUT COMPLETE OVERLAY
+═══════════════════════════ */
+#completeOverlay{
+  position:fixed;inset:0;background:#000;z-index:400;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  max-width:430px;margin:0 auto;padding:32px 24px;text-align:center;
+}
+#completeOverlay.active{display:flex}
+
+.co-elephant{font-size:72px;margin-bottom:8px;animation:bounce 0.6s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.co-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--t1);margin-bottom:6px}
+.co-sub{font-size:13px;color:var(--t3);margin-bottom:32px}
+
+.co-stats{display:flex;gap:12px;margin-bottom:36px;width:100%}
+.co-stat{flex:1;padding:16px 10px;border-radius:14px;border:2px solid;text-align:center}
+.co-stat-icon{font-size:14px;margin-bottom:6px;display:block}
+.co-stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:2px}
+.co-stat-lbl{font-size:9px;letter-spacing:.8px}
+.co-stat.duration{border-color:#7c3aed;background:#1a0f2e}
+.co-stat.duration .co-stat-val{color:var(--xp)}
+.co-stat.xp{border-color:#0ea5e9;background:#0c1a26}
+.co-stat.xp .co-stat-val{color:#38bdf8}
+.co-stat.volume{border-color:#dc2626;background:#1f0a0a}
+.co-stat.volume .co-stat-val{color:var(--red)}
+
+/* XP burst animation */
+.xp-burst{position:fixed;pointer-events:none;z-index:500;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--xp);animation:xpFloat 1s ease forwards}
+@keyframes xpFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.3)}}
+
+.co-continue-btn{width:100%;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--g),var(--gd));color:#000;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;border:none;cursor:pointer;letter-spacing:.5px;margin-bottom:12px}
+.co-continue-btn:active{opacity:.85}
+
+/* ═══════════════════════════
+   ACHIEVEMENT TOAST
+═══════════════════════════ */
+.achievement-toast{
+  position:fixed;top:calc(var(--st) + 16px);left:50%;transform:translateX(-50%) translateY(-120px);
+  background:linear-gradient(135deg,#1a0f2e,#2d1a50);
+  border:1px solid var(--xp);border-radius:16px;padding:12px 20px;
+  display:flex;align-items:center;gap:12px;z-index:600;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;max-width:90vw;
+}
+.achievement-toast.show{transform:translateX(-50%) translateY(0)}
+.achievement-icon{font-size:24px}
+.achievement-info{display:flex;flex-direction:column;gap:2px}
+.achievement-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--xp)}
+.achievement-desc{font-size:10px;color:#a78bfa}
+
+
+/* ── DELETE CONFIRM POPUP ── */
+.del-confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.del-confirm-box{background:#1a1a1a;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:24px 20px;width:calc(100% - 48px);max-width:320px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+.del-confirm-icon{font-size:36px;margin-bottom:12px}
+.del-confirm-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:6px}
+.del-confirm-sub{font-size:12px;color:var(--t3);margin-bottom:20px;line-height:1.5}
+.del-confirm-btns{display:flex;gap:10px}
+.del-confirm-yes{flex:1;padding:13px;border-radius:12px;background:#f87171;border:none;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px}
+.del-confirm-no{flex:1;padding:13px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp .22s ease forwards}
+@keyframes sheetUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+.sheet{animation:sheetUp .25s cubic-bezier(.4,0,.2,1) forwards}
+
+/* ── FREE UNLOCK BADGE ── */
+.free-unlock-badge{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(251,191,36,0.12);
+  border:1px solid rgba(251,191,36,0.35);
+  padding:4px 10px;border-radius:20px;cursor:pointer;
+  transition:all .15s;
+  box-shadow:0 0 8px rgba(251,191,36,0.15),inset 0 1px 0 rgba(251,191,36,0.15);
+}
+.free-unlock-badge:active{background:rgba(251,191,36,0.2);}
+.free-unlock-count{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--amber);line-height:1}
+.free-unlock-lbl{font-size:8px;color:#d97706;letter-spacing:.5px}
+
+/* ── STREAK MULTIPLIER PILL ── */
+.streak-mult{font-size:9px;color:#f0a500;letter-spacing:.3px;font-family:'Syne',sans-serif;font-weight:700;margin-top:1px}
+
+/* ── LEVEL UP FREE UNLOCK OVERLAY ── */
+.lvlup-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:700;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);max-width:430px;margin:0 auto;padding:24px;text-align:center;
+}
+.lvlup-overlay.active{display:flex;}
+.lvlup-em{font-size:80px;margin-bottom:12px;animation:bounce .6s ease infinite alternate;}
+.lvlup-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--t1);margin-bottom:6px;}
+.lvlup-sub{font-size:13px;color:var(--t3);margin-bottom:24px;}
+.lvlup-reward-box{
+  width:100%;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);
+  border-radius:16px;padding:20px;margin-bottom:24px;
+}
+.lvlup-reward-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--amber);margin-bottom:6px;}
+.lvlup-reward-sub{font-size:11px;color:#d97706;line-height:1.5;}
+.lvlup-btn{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,var(--amber),#f59e0b);color:#000;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;border:none;cursor:pointer;letter-spacing:.5px;}
+.lvlup-btn:active{opacity:.85;}
+
+/* ── FREE UNLOCK PICKER SHEET ── */
+.unlock-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.unlock-opt{padding:14px 10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);cursor:pointer;text-align:center;transition:all .15s;}
+.unlock-opt:active{background:rgba(110,231,183,0.1);border-color:rgba(110,231,183,0.3);}
+.unlock-opt-em{font-size:26px;margin-bottom:6px;}
+.unlock-opt-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px;}
+.unlock-opt-cost{font-size:9px;color:var(--xp);letter-spacing:.5px;}
+
+/* ── END WORKOUT CONFIRM MODAL ── */
+.end-confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);max-width:430px;margin:0 auto;}
+.end-confirm-box{background:#1a1a1a;border:1px solid rgba(248,113,113,0.3);border-radius:20px;padding:28px 22px;width:calc(100% - 48px);max-width:320px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.7);}
+.end-confirm-icon{font-size:38px;margin-bottom:12px;}
+.end-confirm-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;}
+.end-confirm-sub{font-size:12px;color:var(--t3);margin-bottom:22px;line-height:1.6;}
+.end-confirm-btns{display:flex;gap:10px;}
+.end-confirm-yes{flex:1;padding:14px;border-radius:12px;background:var(--red);border:none;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px;}
+.end-confirm-no{flex:1;padding:14px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px;}
+
+/* ── FREE UNLOCK SHOP BTN ── */
+.free-unlock-shop-btn{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;border:none;padding:8px 12px;border-radius:9px;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;transition:opacity .15s;letter-spacing:.3px;}
+.free-unlock-shop-btn:active{opacity:.8;}
+
+/* ── SPLIT XP: spendable vs level ── */
+.shop-xp-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.shop-bal-box{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;}
+.shop-bal-box.earn{background:#1a0f2e;border:1px solid #3a2060;}
+.shop-bal-box.spend{background:#0a1f0e;border:1px solid #1a4025;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div>
+        <div class="logo">GRIND<em>LOG</em></div>
+      </div>
+      <div class="hdr-right">
+        <div class="xp-pill">
+          <div class="xp-icon">💎</div>
+          <div>
+            <div class="xp-val" id="xpTotal">0</div>
+            <div class="xp-lbl">XP</div>
+          </div>
+        </div>
+        <div class="streak-pill">
+          <div class="streak-fire">🔥</div>
+          <div>
+            <div class="streak-n" id="streakNum">0</div>
+            <div class="streak-lbl">DAY STREAK</div>
+            <div class="streak-mult" id="streakMult" style="display:none">1.0× XP</div>
+          </div>
+        </div>
+        <div class="free-unlock-badge" id="freeUnlockBadge" style="display:none" title="Tap to spend Free Unlock">
+          <div>🎁</div>
+          <div>
+            <div class="free-unlock-count" id="freeUnlockCount">0</div>
+            <div class="free-unlock-lbl">FREE UNLOCK</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="level-row">
+      <div class="level-badge" id="levelBadge">LVL 1</div>
+      <div class="level-bar-wrap"><div class="level-bar-fill" id="levelBar" style="width:0%"></div></div>
+      <div class="level-xp-txt" id="levelXpTxt">0 / 500 XP</div>
+    </div>
+    <div class="wk-progress">
+      <div class="wk-lbl">THIS WEEK</div>
+      <div class="wk-bar-wrap"><div class="wk-bar-fill" id="wkBar" style="width:0%"></div></div>
+      <div class="wk-val" id="wkProg">0/6</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-v="week"><span class="tab-icon">📅</span>WEEK</button>
+    <button class="tab" data-v="log"><span class="tab-icon">⚡</span>TODAY</button>
+    <button class="tab" data-v="stats"><span class="tab-icon">📊</span>STATS</button>
+    <button class="tab" data-v="shop"><span class="tab-icon">🛒</span>SHOP</button>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+<div id="sheetRoot"></div>
+
+<!-- ACTIVE WORKOUT OVERLAY -->
+<div id="workoutOverlay">
+  <div class="wo-hdr">
+    <div class="wo-hdr-left">
+      <div class="wo-title" id="woTitle">Push Day</div>
+      <div class="wo-timer" id="woGlobalTimer">00:00</div>
+    </div>
+    <button class="wo-end-btn" id="woEndBtn">END</button>
+  </div>
+  <div class="wo-body" id="woBody">
+    <div class="wo-prog-bar"><div class="wo-prog-fill" id="woProg" style="width:0%"></div></div>
+    <div id="woExList"></div>
+  </div>
+</div>
+
+<!-- WORKOUT COMPLETE OVERLAY -->
+<div id="completeOverlay">
+  <div class="co-elephant">🐘</div>
+  <div class="co-title">Good Hustle!</div>
+  <div class="co-sub" id="coSub">Workout complete</div>
+  <div class="co-stats">
+    <div class="co-stat duration">
+      <span class="co-stat-icon">⏱️</span>
+      <div class="co-stat-val" id="coDuration">0:00</div>
+      <div class="co-stat-lbl">DURATION</div>
+    </div>
+    <div class="co-stat xp">
+      <span class="co-stat-icon">💎</span>
+      <div class="co-stat-val" id="coXP">0</div>
+      <div class="co-stat-lbl">XP EARNED</div>
+    </div>
+    <div class="co-stat volume">
+      <span class="co-stat-icon">📦</span>
+      <div class="co-stat-val" id="coVol">0</div>
+      <div class="co-stat-lbl">VOLUME</div>
+    </div>
+  </div>
+  <button class="co-continue-btn" id="coContinueBtn">CONTINUE</button>
+</div>
+
+<!-- LEVEL UP FREE UNLOCK OVERLAY -->
+<div class="lvlup-overlay" id="lvlupOverlay">
+  <div class="lvlup-em">🎉</div>
+  <div class="lvlup-title" id="lvlupTitle">LEVEL UP!</div>
+  <div class="lvlup-sub" id="lvlupSub">You reached a new level!</div>
+  <div class="lvlup-reward-box">
+    <div class="lvlup-reward-title">🎁 FREE UNLOCK</div>
+    <div class="lvlup-reward-sub">You earned a Free Unlock token!<br>Use it in the Shop to unlock any reward for free.</div>
+  </div>
+  <button class="lvlup-btn" id="lvlupClaim">CLAIM FREE UNLOCK</button>
+</div>
+
+<!-- ACHIEVEMENT TOAST -->
+<div class="achievement-toast" id="achievementToast">
+  <div class="achievement-icon" id="achievementIcon">🏆</div>
+  <div class="achievement-info">
+    <div class="achievement-title" id="achievementTitle">Achievement!</div>
+    <div class="achievement-desc" id="achievementDesc"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+var DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+var BASE_PLANS={
+  Mon:{type:"workout",label:"Push",emoji:"💪"},
+  Tue:{type:"walk",  label:"Walk",emoji:"🚶"},
+  Wed:{type:"workout",label:"Pull",emoji:"💪"},
+  Thu:{type:"walk",  label:"Walk",emoji:"🚶"},
+  Fri:{type:"workout",label:"Legs+Core",emoji:"💪"},
+  Sat:{type:"walk",  label:"Walk",emoji:"🚶"},
+  Sun:{type:"walk",  label:"Walk",emoji:"🚶"}
+};
+
+var BASE_WO={
+  "Push":[
+    {name:"DB Floor Press",     sets:3,reps:[12,12,12]},
+    {name:"DB Shoulder Press",  sets:3,reps:[12,12,12]},
+    {name:"Lateral Raise",      sets:3,reps:[15,15,15]},
+    {name:"Diamond Push-ups",   sets:3,reps:[12,12,12]},
+    {name:"Overhead Tricep Ext",sets:3,reps:[12,12,12]}
+  ],
+  "Pull":[
+    {name:"Bent-over Row",   sets:3,reps:[12,12,12]},
+    {name:"Reverse Fly",     sets:3,reps:[15,15,15]},
+    {name:"Single-arm Row",  sets:3,reps:[12,12,12]},
+    {name:"DB Curl",         sets:3,reps:[12,12,12]},
+    {name:"Hammer Curl",     sets:3,reps:[12,12,12]}
+  ],
+  "Legs+Core":[
+    {name:"Goblet Squat",       sets:3,reps:[15,15,15]},
+    {name:"Romanian Deadlift",  sets:3,reps:[12,12,12]},
+    {name:"Reverse Lunge",      sets:3,reps:[12,12,12]},
+    {name:"Plank",              sets:3,reps:[1,1,1]},
+    {name:"Knee Raise",         sets:3,reps:[15,15,15]},
+    {name:"Dead Bug",           sets:3,reps:[10,10,10]}
+  ]
+};
+
+/* ─ State ─ */
+var view="week",activeDay="Mon",weekOff=0;
+var data={};
+var gameData={xp:0,level:1,totalWorkouts:0,achievements:{},freeUnlocks:0,streakMultiplierDay:null,spendableXP:0};
+
+/* ─ Active Workout State ─ */
+var wo={
+  active:false,
+  day:null,
+  exs:[],
+  startTime:0,
+  globalTimerInterval:null,
+  restTimerInterval:null,
+  restRemaining:0,
+  restTotalFor:60,
+  currentExIdx:0,
+  currentSetIdx:0,
+  setTimers:{}, // key: "exIdx-setIdx" → elapsed seconds
+  setTimerIntervals:{},
+  doneSets:{}, // key: "exIdx-setIdx" → true
+  repsDone:{}, // key: "exIdx-setIdx" → number
+  volume:0
+};
+
+/* ─ Persist ─ */
+function getStore(){try{return JSON.parse(localStorage.getItem("gl3")||"{}");}catch(e){return{};}}
+function save(){var s=getStoreFull();localStorage.setItem("gl3",JSON.stringify({d:data,g:gameData,shopItems:getShopItems(),ringGoalsTemp:s.ringGoalsTemp,ringGoalsPerm:s.ringGoalsPerm}));}
+(function(){var s=getStore();data=s.d||{};gameData=s.g||{xp:0,level:1,totalWorkouts:0,achievements:{},freeUnlocks:0,streakMultiplierDay:null,spendableXP:0};
+  if(gameData.freeUnlocks===undefined)gameData.freeUnlocks=0;
+  if(gameData.streakMultiplierDay===undefined)gameData.streakMultiplierDay=null;
+  // spendableXP: for existing saves, seed it equal to xp so nothing breaks
+  if(gameData.spendableXP===undefined)gameData.spendableXP=gameData.xp||0;
+})();
+
+/* ─ Exercises ─ */
+function getExercises(label,wid){
+  var s=getStore(),wkey=(wid||weekId(weekOff))+"-ex-"+label;
+  if(s.d&&s.d[wkey])return s.d[wkey];
+  var pkey="perm-ex-"+label;
+  if(s.d&&s.d[pkey])return s.d[pkey];
+  return JSON.parse(JSON.stringify(BASE_WO[label]||[]));
+}
+function saveExercises(label,arr,scope){
+  if(scope==="perm"){data["perm-ex-"+label]=arr;}
+  else{data[weekId(weekOff)+"-ex-"+label]=arr;}
+  save();
+}
+
+/* ─ Progressive Overload ─ */
+function getPO(day,exName){
+  var k=dk(day)+"-po-"+exName;
+  return (data[k]&&data[k].reps)||[];
+}
+function savePO(day,exName,repsArr){
+  var k=dk(day)+"-po-"+exName;
+  data[k]={reps:repsArr};save();
+}
+
+/* ─ Effort ─ */
+function getEffort(day,wOff){
+  var k=dk(day,wOff===undefined?weekOff:wOff)+"-effort";
+  return data[k]||0;
+}
+function saveEffort(day,val){
+  var k=dk(day)+"-effort";
+  data[k]=val;save();
+}
+
+/* ─ Swap ─ */
+function isRestSwapped(day){var s=getStore();if(!s.d)return false;var wid=weekId(weekOff);for(var k in s.d){if(k.endsWith("-data"))continue;if(k.indexOf(wid+"-")===0&&s.d[k]===day)return true;}return false;}
+function setSwap(fromDay,toDay){var wid=weekId(weekOff),k=wid+"-"+fromDay;if(toDay===null){delete data[k];delete data[k+"-data"];}else{data[k]=toDay;}save();}
+function getPlan(day){
+  var s=getStore(),wid=weekId(weekOff);
+  if(s.d&&s.d[wid+"-"+day]){
+    var td=s.d[wid+"-"+day];
+    if(typeof td==="string")return{type:"rest_walk",label:"Rest",emoji:"🛌"};
+  }
+  if(s.d){for(var k in s.d){if(k.endsWith("-data"))continue;if(k.indexOf(wid+"-")===0){var fd=k.replace(wid+"-","");if(s.d[k]===day)return Object.assign({},BASE_PLANS[fd],{swappedFrom:fd});}}}
+  return BASE_PLANS[day];
+}
+
+/* ─ Utils ─ */
+function clone(x){return JSON.parse(JSON.stringify(x));}
+function esc(s){return s.replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function todayName(){return["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];}
+function ordinal(n){var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function weekId(off){off=off||0;var d=new Date();d.setDate(d.getDate()+off*7);var j=new Date(d.getFullYear(),0,1);var w=Math.ceil(((d-j)/86400000+j.getDay())/7);return d.getFullYear()+"-W"+w;}
+function weekDates(off){var now=new Date(),day=now.getDay();var diff=day===0?-6:1-day;var mon=new Date(now);mon.setDate(now.getDate()+diff+(off||0)*7);var out=[];for(var i=0;i<7;i++){var d=new Date(mon);d.setDate(mon.getDate()+i);out.push(d);}return out;}
+function fmtRange(off){var ds=weekDates(off),a=ds[0],b=ds[6];return ordinal(a.getDate())+" "+MONTHS[a.getMonth()]+" – "+ordinal(b.getDate())+" "+MONTHS[b.getMonth()];}
+function dk(day,off){return weekId(off===undefined?weekOff:off)+"-"+day;}
+function logKey(day,off){return dk(day,off===undefined?weekOff:off)+"-data";}
+function dd(day,off){var k=dk(day,off===undefined?weekOff:off);var v=data[k];if(typeof v==="string"){return data[k+"-data"]||{};}return v||{};}
+function patch(day,obj,off){var k=dk(day,off===undefined?weekOff:off);if(typeof data[k]==="string"){data[k+"-data"]=Object.assign({},data[k+"-data"],obj);}else{data[k]=Object.assign({},data[k],obj);}save();}
+function fmtSecs(s){var m=Math.floor(s/60);var sec=s%60;return m+"m"+String(sec).padStart(2,"0")+"s";}
+function fmtTimer(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
+
+/* ─ Progress / Completion ─ */
+function dayProgress(day,off){
+  var p=getPlan(day),d=dd(day,off===undefined?weekOff:off);
+  if(p.type==="rest")return 100;
+  if(p.type==="rest_walk"||p.type==="walk")return d.walk1?100:0;
+  var exs=getExercises(p.label,weekId(off===undefined?weekOff:off));
+  if(!exs.length)return 0;
+  var done=exs.filter(function(e){return(d.exercises||{})[e.name];}).length;
+  return Math.round(done/exs.length*100);
+}
+function dayDone(day,off){
+  var p=getPlan(day),d=dd(day,off===undefined?weekOff:off);
+  if(p.type==="rest")return true;
+  if(p.type==="rest_walk"||p.type==="walk")return!!d.walk1;
+  var exs=getExercises(p.label,weekId(off===undefined?weekOff:off));
+  var done=exs.filter(function(e){return(d.exercises||{})[e.name];}).length;
+  return exs.length>0&&(done/exs.length*100)>=40&&!!d.walk1;
+}
+function totalKcal(day,off){var d=dd(day,off);return(parseFloat(d.exKcal)||0)+(parseFloat(d.walkKcal)||0);}
+function calcStreak(){
+  var s=0,d=new Date();
+  for(var i=0;i<90;i++){
+    if(i>0)d.setDate(d.getDate()-1);
+    var n=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+    var bp=BASE_PLANS[n];
+    if(bp&&bp.type==="rest"){if(i>0)s++;continue;}
+    var j=new Date(d.getFullYear(),0,1);
+    var w=Math.ceil(((d-j)/86400000+j.getDay())/7);
+    var wid2=d.getFullYear()+"-W"+w;
+    var k=wid2+"-"+n;
+    var raw=data[k];
+    // If key is a string, this day was swapped to rest — treat as rest day (skip, don't break streak)
+    if(typeof raw==="string"){if(i>0)s++;continue;}
+    var d2=raw||{};
+    var ok=false;
+    if(bp.type==="walk")ok=!!d2.walk1;
+    else{var exs2=getExercises(bp.label,wid2),ce=d2.exercises||{};var dn=exs2.filter(function(x){return ce[x.name];}).length;ok=exs2.length>0&&(dn/exs2.length*100)>=40&&!!d2.walk1;}
+    if(ok)s++;else if(i>0)break;
+  }
+  return s;
+}
+
+/* ═══════════════════════════════════════════
+   GAMIFICATION
+═══════════════════════════════════════════ */
+var XP_WORKOUT_COMPLETE=0; // now calculated from reps
+var XP_WALK_PER_KCAL_PCT=0.1; // 10% of kcal = XP
+var XP_STREAK_BONUS=25;
+var XP_SKIP_PENALTY=50; // lose XP for skipping
+var XP_RINGS_COMPLETE=100; // bonus for completing all 3 rings
+
+/* ─ Ring Goals ─ */
+var DEFAULT_RING_GOALS={move:500,exercise:60,stand:8};
+function getRingGoals(dayKey){
+  var s=getStore();
+  // Check for day-specific (temporary) override
+  if(s.ringGoalsTemp&&s.ringGoalsTemp[dayKey])return s.ringGoalsTemp[dayKey];
+  // Check for permanent override
+  if(s.ringGoalsPerm)return s.ringGoalsPerm;
+  return DEFAULT_RING_GOALS;
+}
+function saveRingGoals(goals,scope,dayKey){
+  var s=getStore();
+  if(scope==="temp"){
+    if(!s.ringGoalsTemp)s.ringGoalsTemp={};
+    s.ringGoalsTemp[dayKey]=goals;
+  } else {
+    s.ringGoalsPerm=goals;
+    // clear any temp overrides since permanent takes precedence going forward
+  }
+  localStorage.setItem("gl3",JSON.stringify({d:data,g:gameData,shopItems:getShopItems(),ringGoalsTemp:s.ringGoalsTemp,ringGoalsPerm:s.ringGoalsPerm}));
+}
+function getStoreFull(){
+  try{return JSON.parse(localStorage.getItem("gl3")||"{}");}catch(e){return{};}
+}
+
+var LEVEL_THRESHOLDS=[0,500,1200,2200,3500,5000,7000,9500,12500,16000,20000];
+
+/* ─ Shop data ─ */
+var PERMANENT_SHOP_ITEMS=[
+  {id:"free_skip_day",emoji:"🎟️",name:"Free Skip Day",desc:"Next 'move day' use skips it entirely instead of rescheduling — no XP lost",cost:400,permanent:true},
+  {id:"double_xp",emoji:"⚡",name:"2× Multiplier",desc:"Next workout AND next walk earn double XP (1 use = 2× for both)",cost:300,permanent:true}
+];
+
+var DEFAULT_SHOP_ITEMS=[
+  {id:"cheat_day",emoji:"🍕",name:"Cheat Day",desc:"One guilt-free cheat meal — you earned it",cost:200},
+  {id:"rest_day_free",emoji:"😴",name:"Free Rest Day",desc:"Skip a workout without losing XP",cost:150},
+  {id:"xp_boost",emoji:"⚡",name:"XP Boost x2",desc:"Double XP on your next workout",cost:300},
+  {id:"new_playlist",emoji:"🎵",name:"New Playlist",desc:"Reward yourself with a new banger playlist",cost:100},
+  {id:"meal_prep",emoji:"🥗",name:"Meal Prep Day",desc:"Dedicate a day to prepping clean food",cost:120},
+  {id:"massage",emoji:"💆",name:"Massage",desc:"Book yourself a proper recovery massage",cost:500}
+];
+
+function calcLevel(xp){
+  for(var i=LEVEL_THRESHOLDS.length-1;i>=0;i--){if(xp>=LEVEL_THRESHOLDS[i])return i+1;}return 1;
+}
+function xpForLevel(lvl){return LEVEL_THRESHOLDS[Math.min(lvl-1,LEVEL_THRESHOLDS.length-1)]||0;}
+function xpForNextLevel(lvl){return LEVEL_THRESHOLDS[Math.min(lvl,LEVEL_THRESHOLDS.length-1)]||LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length-1];}
+function levelProgress(xp){
+  var lvl=calcLevel(xp);
+  var cur=xpForLevel(lvl),nxt=xpForNextLevel(lvl);
+  if(nxt===cur)return 100;
+  return Math.round((xp-cur)/(nxt-cur)*100);
+}
+
+function getStreakMultiplier(){
+  // multiplier = 1 + (streak * 0.1), applied for tomorrow based on today's streak
+  // We compare today's date vs streakMultiplierDay to know if the streak bonus is active
+  var streak=calcStreak();
+  if(streak<=0)return 1;
+  return Math.round((1+streak*0.1)*10)/10; // round to 1 decimal
+}
+
+function addXP(amount,label,x,y){
+  var prev=gameData.xp||0;
+  var multiplied=amount;
+  // Apply 2x multiplier if active (only on positive gains from workout/walk)
+  if(amount>0&&(label==="set"||label==="walk")&&gameData.doubleXpActive){
+    multiplied=amount*2;
+  }
+  // Apply streak multiplier (on positive workout/walk XP)
+  if(amount>0&&(label==="set"||label==="walk")){
+    var today=new Date().toDateString();
+    // streakMultiplierDay stores the date the multiplier was EARNED (day before today)
+    // The multiplier for today = streak from yesterday
+    if(gameData.streakMultiplierDay&&gameData.streakMultiplierDay===today){
+      var sm=gameData.streakMultiplier||1;
+      if(sm>1)multiplied=Math.round(multiplied*sm);
+    }
+  }
+  gameData.xp=Math.max(0,(prev+multiplied));
+  // spendableXP earns identically but is only spent by the shop, never auto-removed
+  if(multiplied>0){
+    gameData.spendableXP=(gameData.spendableXP||0)+multiplied;
+  }
+  // (negative XP from deselecting walk etc reduces spendableXP too but never below 0)
+  if(multiplied<0){
+    gameData.spendableXP=Math.max(0,(gameData.spendableXP||0)+multiplied);
+  }
+  var newLvl=calcLevel(gameData.xp);
+  var oldLvl=calcLevel(prev);
+  save();
+  // burst
+  var burst=document.createElement("div");
+  burst.className="xp-burst";
+  var sign=multiplied>=0?"+":"";
+  var multLabel="";
+  if(gameData.doubleXpActive&&amount>0&&(label==="set"||label==="walk"))multLabel=" 2×";
+  else if(gameData.streakMultiplierDay&&gameData.streakMultiplierDay===new Date().toDateString()&&(gameData.streakMultiplier||1)>1&&amount>0)multLabel=" "+gameData.streakMultiplier+"×🔥";
+  burst.textContent=sign+multiplied+multLabel+" XP";
+  if(multiplied<0){burst.style.color="#f87171";}
+  else if(multLabel){burst.style.color="#fbbf24";}
+  burst.style.left=(x||window.innerWidth/2)+"px";
+  burst.style.top=(y||100)+"px";
+  document.body.appendChild(burst);
+  setTimeout(function(){burst.remove();},1100);
+  if(newLvl>oldLvl){
+    // Award free unlock per level gained
+    var levelsGained=newLvl-oldLvl;
+    gameData.freeUnlocks=(gameData.freeUnlocks||0)+levelsGained;
+    save();
+    // Show level-up overlay (queued for after current action)
+    setTimeout(function(){showLevelUpOverlay(newLvl);},400);
+  } else if(newLvl<oldLvl){
+    // Remove free unlock(s) per level lost
+    var levelsLost=oldLvl-newLvl;
+    gameData.freeUnlocks=Math.max(0,(gameData.freeUnlocks||0)-levelsLost);
+    save();
+    showAchievement("⬇️","LEVEL DOWN","Lost a level — free unlock removed");
+  }
+  updateHeader();
+}
+
+var ACHIEVEMENTS=[
+  {id:"first_workout",icon:"💪",title:"First Blood",desc:"Complete your first workout"},
+  {id:"streak3",icon:"🔥",title:"On Fire",desc:"3-day streak"},
+  {id:"streak7",icon:"⚡",title:"Unstoppable",desc:"7-day streak"},
+  {id:"level5",icon:"🌟",title:"Rising Star",desc:"Reach Level 5"},
+  {id:"workouts10",icon:"🏋️",title:"Grinder",desc:"Complete 10 workouts"},
+];
+
+function checkAchievements(){
+  var streak=calcStreak();
+  var xp=gameData.xp||0;
+  var lvl=calcLevel(xp);
+  var total=gameData.totalWorkouts||0;
+  var checks=[
+    {id:"first_workout",cond:total>=1},
+    {id:"streak3",cond:streak>=3},
+    {id:"streak7",cond:streak>=7},
+    {id:"level5",cond:lvl>=5},
+    {id:"workouts10",cond:total>=10}
+  ];
+  checks.forEach(function(c){
+    if(c.cond&&!gameData.achievements[c.id]){
+      gameData.achievements[c.id]=true;save();
+      var a=ACHIEVEMENTS.filter(function(x){return x.id===c.id;})[0];
+      if(a)showAchievement(a.icon,a.title,a.desc);
+    }
+  });
+}
+
+var toastTimeout=null;
+function showAchievement(icon,title,desc){
+  var el=document.getElementById("achievementToast");
+  document.getElementById("achievementIcon").textContent=icon;
+  document.getElementById("achievementTitle").textContent=title;
+  document.getElementById("achievementDesc").textContent=desc;
+  el.classList.add("show");
+  if(toastTimeout)clearTimeout(toastTimeout);
+  toastTimeout=setTimeout(function(){el.classList.remove("show");},3500);
+}
+
+function showLevelUpOverlay(newLvl){
+  var ov=document.getElementById("lvlupOverlay");
+  document.getElementById("lvlupTitle").textContent="LEVEL "+newLvl+"! 🎉";
+  document.getElementById("lvlupSub").textContent="You crushed it to Level "+newLvl+"!";
+  ov.classList.add("active");
+  var claimBtn=document.getElementById("lvlupClaim");
+  // Remove old listener
+  var newBtn=claimBtn.cloneNode(true);
+  claimBtn.parentNode.replaceChild(newBtn,claimBtn);
+  newBtn.addEventListener("click",function(){
+    ov.classList.remove("active");
+    // If they have unlocks, prompt to use one now or later
+    if((gameData.freeUnlocks||0)>0){
+      updateHeader();
+    }
+  });
+}
+
+function openFreeUnlockPicker(){
+  if(!gameData.freeUnlocks||gameData.freeUnlocks<=0)return;
+  var allItems=[].concat(PERMANENT_SHOP_ITEMS,getShopItems());
+  var h='<div class="sheet-title">🎁 Free Unlock</div>'
+    +'<div class="sheet-sub">PICK ANY REWARD TO UNLOCK FOR FREE ('+gameData.freeUnlocks+' remaining)</div>'
+    +'<div class="unlock-grid">';
+  allItems.forEach(function(item,idx){
+    h+='<div class="unlock-opt" data-fuidx="'+idx+'">'
+      +'<div class="unlock-opt-em">'+item.emoji+'</div>'
+      +'<div class="unlock-opt-name">'+item.name+'</div>'
+      +'<div class="unlock-opt-cost">'+item.cost+' XP (FREE)</div>'
+      +'</div>';
+  });
+  h+='</div><button class="sb sec" id="fuCancel">CANCEL</button>';
+  openSheet(h);
+  document.getElementById("fuCancel").addEventListener("click",closeSheet);
+  document.querySelectorAll("[data-fuidx]").forEach(function(opt){
+    opt.addEventListener("click",function(){
+      var idx=parseInt(opt.dataset.fuidx);
+      var item=allItems[idx];
+      if(!item)return;
+      // grant item without XP cost
+      if(!gameData.ownedItems)gameData.ownedItems={};
+      if(!gameData.ownedItems[item.id])gameData.ownedItems[item.id]={count:0};
+      gameData.ownedItems[item.id].count++;
+      gameData.freeUnlocks=Math.max(0,(gameData.freeUnlocks||1)-1);
+      if(!gameData.shopHistory)gameData.shopHistory=[];
+      var now=new Date();
+      gameData.shopHistory.push({id:item.id,emoji:item.emoji,name:item.name,
+        date:now.getDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()]+" (FREE)"});
+      save();
+      showAchievement(item.emoji,"FREE UNLOCK!",item.name+" added to your stash 🎁");
+      closeSheet();updateHeader();render();
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+function updateHeader(){
+  document.getElementById("streakNum").textContent=calcStreak();
+  var wTotal=DAYS.filter(function(d){return BASE_PLANS[d].type!=="rest";}).length;
+  var wDone=DAYS.filter(function(d){return dayDone(d,0);}).length;
+  document.getElementById("wkProg").textContent=wDone+"/"+wTotal;
+  document.getElementById("wkBar").style.width=Math.round(wDone/wTotal*100)+"%";
+
+  var xp=gameData.xp||0;
+  var spendable=gameData.spendableXP||0;
+  var lvl=calcLevel(xp);
+  var lvlPct=levelProgress(xp);
+  var nxt=xpForNextLevel(lvl);
+  document.getElementById("xpTotal").textContent=spendable;
+  document.getElementById("levelBadge").textContent="LVL "+lvl;
+  document.getElementById("levelBar").style.width=lvlPct+"%";
+  document.getElementById("levelXpTxt").textContent=xp+" / "+nxt+" XP";
+
+  // Free unlock badge
+  var fu=gameData.freeUnlocks||0;
+  var badge=document.getElementById("freeUnlockBadge");
+  if(badge){
+    badge.style.display=fu>0?"flex":"none";
+    document.getElementById("freeUnlockCount").textContent=fu;
+  }
+
+  // Streak multiplier display
+  var streak=calcStreak();
+  var multEl=document.getElementById("streakMult");
+  if(multEl){
+    if(streak>=1){
+      var nextMult=Math.round((1+(streak)*0.1)*10)/10;
+      multEl.style.display="block";
+      multEl.textContent=nextMult+"× tomorrow";
+    } else {
+      multEl.style.display="none";
+    }
+  }
+
+  // Check if today's streak multiplier should be active
+  var today=new Date().toDateString();
+  // Set the multiplier for today based on yesterday's streak end
+  // We store it when a workout is finished; here just display
+}
+
+/* ═══════════════════════════════════════════
+   EFFORT BARS (triangle bar style)
+═══════════════════════════════════════════ */
+function effortColor(val){
+  if(val<=2)return{label:"Easy",color:"#22c55e",cls:"effort-c1"};
+  if(val<=4)return{label:"Light",color:"#84cc16",cls:"effort-c2"};
+  if(val<=6)return{label:"Moderate",color:"#eab308",cls:"effort-c3"};
+  if(val<=8)return{label:"Hard",color:"#f97316",cls:"effort-c4"};
+  return{label:"All Out",color:"#ef4444",cls:"effort-c5"};
+}
+
+// Heights for each of 10 bars (ascending triangle shape)
+var BAR_HEIGHTS=[12,16,20,24,28,32,36,40,44,48];
+
+function renderEffortSlider(day,containerId){
+  var val=getEffort(day)||0;
+  var c=effortColor(val||1);
+  var el=document.getElementById(containerId);
+  if(!el)return;
+  
+  var barsHtml='<div class="effort-bars" id="effortBars_'+day+'">';
+  for(var i=1;i<=10;i++){
+    var h=BAR_HEIGHTS[i-1];
+    var isActive=i<=val;
+    var col=isActive?effortColor(i).color:"var(--b2)";
+    barsHtml+='<div class="effort-bar'+(isActive?" active":"")+'" data-v="'+i+'" style="height:'+h+'px;background:'+col+'"></div>';
+  }
+  barsHtml+='</div>';
+  
+  el.innerHTML=
+    '<div class="effort-top">'
+      +'<span class="effort-lbl">EFFORT / LOAD</span>'
+      +'<span class="effort-val-lbl" id="effortValLbl_'+day+'" style="color:'+(val>0?c.color:"var(--t3)")+'">'
+        +(val===0?"—":val+" · "+c.label)
+      +'</span>'
+    +'</div>'
+    +barsHtml;
+  
+  bindEffortBars(day);
+}
+
+function bindEffortBars(day){
+  var bars=document.getElementById("effortBars_"+day);
+  if(!bars)return;
+  
+  function updateBars(val){
+    bars.querySelectorAll(".effort-bar").forEach(function(bar,idx){
+      var bv=idx+1;
+      var isActive=bv<=val;
+      bar.style.background=isActive?effortColor(bv).color:"var(--b2)";
+      bar.classList.toggle("active",isActive);
+    });
+    var lbl=document.getElementById("effortValLbl_"+day);
+    if(lbl){
+      var c=effortColor(val||1);
+      lbl.style.color=val>0?c.color:"var(--t3)";
+      lbl.textContent=val===0?"—":val+" · "+c.label;
+    }
+    saveEffort(day,val);
+  }
+  
+  function getValFromTouch(e){
+    var rect=bars.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var pct=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
+    return Math.round(pct*10);
+  }
+  
+  var dragging=false;
+  bars.addEventListener("touchstart",function(e){dragging=true;updateBars(getValFromTouch(e));e.preventDefault();},{passive:false});
+  bars.addEventListener("mousedown",function(e){dragging=true;updateBars(getValFromTouch(e));});
+  document.addEventListener("touchmove",function(e){if(!dragging)return;updateBars(getValFromTouch(e));e.preventDefault();},{passive:false});
+  document.addEventListener("mousemove",function(e){if(!dragging)return;updateBars(getValFromTouch(e));});
+  document.addEventListener("touchend",function(){dragging=false;});
+  document.addEventListener("mouseup",function(){dragging=false;});
+  
+  // tap on individual bars
+  bars.querySelectorAll(".effort-bar").forEach(function(bar){
+    bar.addEventListener("click",function(){updateBars(parseInt(bar.dataset.v));});
+  });
+}
+
+function focusWM(id){var el=document.getElementById("wm"+id.charAt(0).toUpperCase()+id.slice(1));if(el){el.focus();el.select();}}
+
+/* ═══════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════ */
+function render(){
+  updateHeader();
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.dataset.v===view);});
+  var c=document.getElementById("content");
+  c.innerHTML="";
+  var d=document.createElement("div");d.className="fade";
+  if(view==="week")     d.innerHTML=renderWeek();
+  else if(view==="log") d.innerHTML=renderLog();
+  else if(view==="shop")d.innerHTML=renderShop();
+  else                  d.innerHTML=renderStats();
+  c.appendChild(d);
+
+  // Render effort bars (can't do inline in innerHTML)
+  if(view==="log"){
+    var cid2="effortSliderLog";
+    if(document.getElementById(cid2)){renderEffortSlider(activeDay,cid2);}
+  }
+
+  bind();
+}
+
+/* ─ WEEK VIEW ─ */
+function renderWeek(){
+  var today=todayName();
+  var lbl=weekOff===0?"THIS WEEK":weekOff===1?"NEXT WEEK":weekOff===-1?"LAST WEEK":Math.abs(weekOff)+"W AGO";
+  var h='<div class="wk-nav">'
+    +'<button class="nav-arr" id="wPrev">‹</button>'
+    +'<div style="text-align:center"><div class="wk-nav-lbl">'+lbl+'</div><div class="wk-nav-date">'+fmtRange(weekOff)+'</div></div>'
+    +'<button class="nav-arr'+(weekOff>=1?" dim":"")+'" id="wNext">›</button>'
+    +'</div>';
+
+  DAYS.forEach(function(day){
+    var p=getPlan(day);
+    var isToday=day===today&&weekOff===0;
+    var isRest=p.type==="rest";
+    var isRestWalk=p.type==="rest_walk";
+    var prog=dayProgress(day),kcal=totalKcal(day,weekOff);
+    var done=dayDone(day);
+    var effort=getEffort(day);
+    var effortC=effort>0?effortColor(effort):{label:null,color:"var(--t3)"};
+    var cls="day-card"+(isToday?" today":"")+(isRest?" is-rest":"")+(isRestWalk?" is-rest-swap":"");
+    var pctTxt=prog>0?(isRest?"":prog+"%"):"";
+    h+='<div class="'+cls+'" data-day="'+day+'">'
+      +'<div class="day-card-top">'
+      +'<div class="day-em">'+p.emoji+'</div>'
+      +'<div class="day-body">'
+      +'<div class="day-top"><span class="day-name">'+day+'</span>'
+      +(isToday?'<span class="pill pill-today">TODAY</span>':"")
+      +(isRestWalk?'<span class="pill pill-rest">REST</span>':"")
+      +(done&&!isRest?'<span class="pill pill-done">✓</span>':"")
+      +(effort>0?'<span style="font-size:9px;font-family:\'Syne\',sans-serif;font-weight:700;color:'+effortC.color+'">'+effortC.label.toUpperCase()+'</span>':"")
+      +'</div>'
+      +'<div class="day-sub">'+p.label+'</div>'
+      +(kcal>0?'<div class="day-kcal">'+kcal+' kcal</div>':"")
+      +(!isRest?'<div class="mini-prog"><div class="mini-prog-fill" style="width:'+prog+'%"></div></div>':"")
+      +'</div>'
+      +'<div class="day-right'+(prog===100?" g":"")+'">'+pctTxt+'</div>'
+      +'</div>'
+      +'</div>';
+  });
+  return h;
+}
+
+/* ─ LOG VIEW ─ */
+function renderLog(){
+  var today=todayName();
+  var p=getPlan(activeDay);
+  var d=dd(activeDay);
+  var label=p.label;
+  var isWorkout=p.type==="workout"||(p.swappedFrom!==undefined);
+  var exs=isWorkout?getExercises(label):[];
+  var cExs=d.exercises||{};
+  var exDone=exs.filter(function(e){return cExs[e.name];}).length;
+  var pct=exs.length?Math.round(exDone/exs.length*100):0;
+  var complete=dayDone(activeDay);
+  var kcalTotal=totalKcal(activeDay);
+  var isRestWalk=p.type==="rest_walk";
+
+  var h='<div class="day-scroller">';
+  DAYS.forEach(function(day){
+    var isOn=day===activeDay,isDone=dayDone(day),isToday=day===today&&weekOff===0;
+    h+='<button class="dtab'+(isOn?" on":isDone?" done":"")+(isToday&&!isOn?" tod":"")+'" data-ld="'+day+'">'+day+'</button>';
+  });
+  h+='</div>';
+
+  h+='<div class="log-title-row"><div class="log-title">'+p.emoji+' '+p.label+'</div>'
+    +(complete?'<div class="log-complete-badge">✓ DONE</div>':"")+'</div>';
+
+  if(p.type==="rest"){
+    return h+'<div class="rest-screen"><div class="rest-em">😴</div><div class="rest-ttl">REST DAY</div><div class="rest-sub">Recovery is part of the program.</div></div>';
+  }
+  if(isRestWalk){
+    h+='<button class="rest-btn active-rest" id="undoRestBtn"><span class="rest-btn-icon">↩</span> Undo rest day</button>';
+    h+='<div style="padding:16px 0 8px;text-align:center;font-size:11px;color:var(--t3)">Workout moved · walk still counts 🚶</div>';
+    h+=renderWalkSection(d,kcalTotal);
+    h+=renderRingsSection(d,activeDay);
+    return h;
+  }
+  if(isWorkout){
+    h+='<button class="rest-btn" id="restDayBtn"><span class="rest-btn-icon">🛌</span> Take a rest day</button>';
+  }
+
+  // START WORKOUT BUTTON
+  if(isWorkout&&exs.length){
+    h+='<button class="start-workout-btn" id="startWorkoutBtn"><span class="sw-icon">▶</span> START WORKOUT</button>';
+    h+='<div class="sec">EXERCISES &nbsp;'+pct+'%</div>';
+    h+='<div class="prog-track"><div class="prog-track-fill" style="width:'+pct+'%"></div></div>';
+    h+='<div class="ex-list">';
+    exs.forEach(function(ex){
+      var done=cExs[ex.name];
+      var po=getPO(activeDay,ex.name);
+      var hasPO=po.length>0&&po.some(function(v){return v>0;});
+      // Show actual reps done per set; fall back to plan
+      var setsLabel;
+      if(hasPO){
+        // Format: S1:12 S2:30 S3:25
+        setsLabel=po.map(function(v,i){return"S"+(i+1)+":"+v;}).join(" · ");
+      } else {
+        // Default plan format: 3×12
+        var allSame=ex.reps.every(function(r){return r===ex.reps[0];});
+        setsLabel=allSame?ex.sets+"×"+ex.reps[0]:ex.sets+"× "+ex.reps.join("/");
+      }
+      h+='<div class="ex-item" data-ex="'+esc(ex.name)+'">'
+        +'<div class="chk'+(done?" on":"")+'"></div>'
+        +'<div class="ex-label">'
+        +'<div class="ex-nm'+(done?" done":"")+'">'+ex.name+'</div>'
+        +'<div class="ex-meta"><span class="ex-sets-lbl">'+setsLabel+'</span>'
+        +(hasPO?'<span class="po-tag">✓ LOGGED</span>':"")
+        +'</div></div>'
+        +'<button class="ex-btn" data-exedit="'+esc(ex.name)+'">EDIT</button>'
+        +'</div>';
+    });
+    h+='</div>';
+    h+='<div class="add-row" id="addExBtn"><div class="add-row-icon">+</div><span>Add exercise</span></div>';
+    h+='<div class="card" style="margin-bottom:16px"><div class="card-row">'
+      +'<span class="card-lbl">WORKOUT KCAL</span>'
+      +'<input class="card-val" type="number" inputmode="decimal" placeholder="0" value="'+(d.exKcal||"")+'" id="exKcalIn"/>'
+      +'<span class="card-unit">kcal</span></div></div>';
+  }
+
+  h+=renderRingsSection(d,activeDay);
+
+  h+='<div class="sec">WALK</div>';
+  h+=renderWalkSection(d,kcalTotal);
+
+  // Effort Slider for log view
+  h+='<div class="sec">EFFORT</div>';
+  h+='<div class="card" style="margin-bottom:16px"><div id="effortSliderLog"></div></div>';
+
+  h+='<div class="sec">LOG</div>';
+  h+='<div class="card"><div class="card-row">'
+    +'<span class="card-lbl">WEIGHT</span>'
+    +'<input class="w-input" type="number" inputmode="decimal" placeholder="kg" value="'+(d.weight||"")+'" id="wIn"/>'
+    +'</div></div>';
+  h+='<div class="card"><div class="sec" style="margin-bottom:8px">NOTES</div>'
+    +'<textarea class="n-input" rows="3" placeholder="How did it feel?" id="nIn">'+(d.note||"")+'</textarea></div>';
+  return h;
+}
+
+function renderRingsSection(d,day){
+  var rh='<div class="sec">APPLE WATCH RINGS</div>';
+  var wm=d.watchMetrics||{};
+  var dayKey2=dk(day);
+  var rGoals=getRingGoals(dayKey2);
+  var moveVal=parseFloat(wm.move)||0, moveMax=rGoals.move||500;
+  var exVal=parseFloat(wm.exercise)||0, exMax=rGoals.exercise||60;
+  var standVal=parseFloat(wm.stand)||0, standMax=rGoals.stand||8;
+  var allRingsDone=moveVal>=moveMax&&exVal>=exMax&&standVal>=standMax;
+  function ringPct(v,mx){return Math.min(1,v/mx);}
+  function arc(cx,cy,r,pct,color,trackColor,sw){
+    var circ=2*Math.PI*r,dash=circ*Math.min(pct,0.9999),gap=circ-dash;
+    var t='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+trackColor+'" stroke-width="'+sw+'"/>';
+    if(pct<=0)return t;
+    var s='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'"'
+      +' stroke-dasharray="'+dash+' '+gap+'"'
+      +' stroke-dashoffset="0"'
+      +' stroke-linecap="round"'
+      +' transform="rotate(-90 '+cx+' '+cy+')"'
+      +'/>';
+    return t+s;
+  }
+  var sz=148,cx=74,cy=74,r1=60,r2=46,r3=32,sw=10;
+  var svgRings='<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 '+sz+' '+sz+'">'
+    +arc(cx,cy,r1,ringPct(moveVal,moveMax),'#ff375f','rgba(255,55,95,0.15)',sw)
+    +arc(cx,cy,r2,ringPct(exVal,exMax),'#92f442','rgba(146,244,66,0.15)',sw)
+    +arc(cx,cy,r3,ringPct(standVal,standMax),'#1ac8ff','rgba(26,200,255,0.15)',sw)
+    +'</svg>';
+  var ringsXpBadge=allRingsDone?'<span style="font-size:9px;background:rgba(110,231,183,0.15);color:var(--g);border:1px solid rgba(110,231,183,0.3);border-radius:6px;padding:2px 7px;letter-spacing:.5px;font-family:\'Syne\',sans-serif;font-weight:700">🎯 +100 XP</span>':"";
+  rh+='<div class="watch-rings-wrap" style="position:relative">'
+    +'<button id="ringGoalsEditBtn" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--t3);transition:all .15s;z-index:2" title="Edit goals">✏️</button>'
+    +(allRingsDone?'<div style="position:absolute;top:10px;left:12px">'+ringsXpBadge+'</div>':"")
+    +'<div class="watch-rings-inner">'
+    +'<div class="ring-svg-wrap">'+svgRings+'</div>'
+    +'<div class="ring-labels">'
+    +'<div class="ring-label-row" onclick="document.getElementById(\'wmMove\').focus();document.getElementById(\'wmMove\').select()">'
+    +'<div class="ring-dot" style="background:#ff375f;box-shadow:0 0 6px #ff375f88"></div>'
+    +'<div class="ring-label-text"><span class="ring-label-name">MOVE</span>'
+    +'<div style="display:flex;align-items:baseline;gap:3px">'
+    +'<input class="wm-input move-inp" type="number" inputmode="decimal" id="wmMove" placeholder="0" value="'+(wm.move||"")+'" style="color:#ff375f"/>'
+    +'<span class="ring-label-unit">/ '+moveMax+'</span></div></div></div>'
+    +'<div class="ring-label-row" onclick="document.getElementById(\'wmExercise\').focus();document.getElementById(\'wmExercise\').select()">'
+    +'<div class="ring-dot" style="background:#92f442;box-shadow:0 0 6px #92f44288"></div>'
+    +'<div class="ring-label-text"><span class="ring-label-name">EXERCISE</span>'
+    +'<div style="display:flex;align-items:baseline;gap:3px">'
+    +'<input class="wm-input exercise-inp" type="number" inputmode="decimal" id="wmExercise" placeholder="0" value="'+(wm.exercise||"")+'" style="color:#92f442"/>'
+    +'<span class="ring-label-unit">/ '+exMax+' MIN</span></div></div></div>'
+    +'<div class="ring-label-row" onclick="document.getElementById(\'wmStand\').focus();document.getElementById(\'wmStand\').select()">'
+    +'<div class="ring-dot" style="background:#1ac8ff;box-shadow:0 0 6px #1ac8ff88"></div>'
+    +'<div class="ring-label-text"><span class="ring-label-name">STAND</span>'
+    +'<div style="display:flex;align-items:baseline;gap:3px">'
+    +'<input class="wm-input stand-inp" type="number" inputmode="decimal" id="wmStand" placeholder="0" value="'+(wm.stand||"")+'" style="color:#1ac8ff"/>'
+    +'<span class="ring-label-unit">/ '+standMax+' HRS</span></div></div></div>'
+    +'</div></div></div>';
+  return rh;
+}
+
+function renderWalkSection(d,kcalTotal){
+  var wDone=d.walk1;
+  var h='<div class="walk-toggle'+(wDone?" on":"")+'" id="walkBtn">'
+    +'<div class="walk-icon">🚶</div>'
+    +'<div class="walk-text"><div class="walk-title">Walk</div>'
+    +'<div class="walk-hint">'+(wDone?"Logged ✓":"Tap to log")+'</div></div>'
+    +'<div class="walk-check"></div></div>';
+  h+='<div class="card" style="margin-top:8px;margin-bottom:8px"><div class="card-row">'
+    +'<span class="card-lbl">WALK KCAL</span>'
+    +'<input class="card-val" type="number" inputmode="decimal" placeholder="0" value="'+(d.walkKcal||"")+'" id="walkKcalIn"/>'
+    +'<span class="card-unit">kcal</span></div></div>';
+  h+='<div class="total-card">'
+    +'<div><div class="total-lbl">TOTAL BURNT</div></div>'
+    +'<div><span class="total-val" id="totalKcalDisp">'+(kcalTotal||0)+'</span><span class="total-unit">kcal</span></div></div>';
+  return h;
+}
+
+/* ─ STATS VIEW ─ */
+function renderStats(){
+  var s=calcStreak(),totalComplete=0;
+  Object.keys(data).forEach(function(k){
+    var parts=k.split("-"),day=parts[parts.length-1];
+    if(!BASE_PLANS[day])return;
+    var d2=data[k],p2=BASE_PLANS[day];
+    if(p2.type==="walk"&&d2.walk1){totalComplete++;return;}
+    if(p2.type==="workout"){
+      var wid2=k.split("-"+day)[0];
+      var exs2=getExercises(p2.label,wid2),ce=d2.exercises||{};
+      var dn=exs2.filter(function(x){return ce[x.name];}).length;
+      if(exs2.length&&(dn/exs2.length*100)>=40&&d2.walk1)totalComplete++;
+    }
+  });
+  var wDone=DAYS.filter(function(d){return dayDone(d,0);}).length;
+  var wTotal=7;
+  var walks=Object.keys(data).filter(function(k){return data[k]&&data[k].walk1;}).length;
+  var xp=gameData.xp||0;
+  var lvl=calcLevel(xp);
+
+  var h='<div class="stats-h">PROGRESS</div><div class="sg">';
+  [["🔥","Streak",s+" days"],["💎","XP",""+xp],["💪","Level","LVL "+lvl],["✅","Done",""+totalComplete]]
+  .forEach(function(r){h+='<div class="sc"><div class="sc-em">'+r[0]+'</div><div class="sc-val">'+r[2]+'</div><div class="sc-lbl">'+r[1].toUpperCase()+'</div></div>';});
+  h+='</div>';
+
+  // Achievements
+  h+='<div class="sec">ACHIEVEMENTS</div>';
+  h+='<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">';
+  ACHIEVEMENTS.forEach(function(a){
+    var unlocked=gameData.achievements&&gameData.achievements[a.id];
+    h+='<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s1);border:1px solid '+(unlocked?"#3a2060":"var(--b1)")+';border-radius:12px;opacity:'+(unlocked?1:.4)+';">'
+      +'<span style="font-size:22px">'+(unlocked?a.icon:"🔒")+'</span>'
+      +'<div><div style="font-size:12px;color:'+(unlocked?"var(--xp)":"var(--t3)")+'">'+a.title+'</div>'
+      +'<div style="font-size:10px;color:var(--t3);margin-top:2px">'+a.desc+'</div></div>'
+      +(unlocked?'<div style="margin-left:auto;font-size:10px;color:#7c5fba">✓ UNLOCKED</div>':"")
+      +'</div>';
+  });
+  h+='</div>';
+
+  var weeks=[];
+  for(var i=7;i>=0;i--){
+    var wid3=weekId(-i);
+    var activeDays=DAYS.filter(function(d){return BASE_PLANS[d].type!=="rest";});
+    var comp=activeDays.filter(function(day){
+      var k=wid3+"-"+day,d2=data[k]||{},p2=BASE_PLANS[day];
+      if(p2.type==="walk")return!!d2.walk1;
+      var ex2=getExercises(p2.label,wid3),ce=d2.exercises||{};
+      var dn=ex2.filter(function(x){return ce[x.name];}).length;
+      return ex2.length&&(dn/ex2.length*100)>=40&&!!d2.walk1;
+    }).length;
+    weeks.push({pct:Math.round(comp/activeDays.length*100),lbl:i===0?"Now":i+"W"});
+  }
+  var W=300,H=110,pL=28,pB=20,pT=10,gW=W-pL-8,gH=H-pB-pT,n=weeks.length,xS=gW/(n-1);
+  function gx(ii){return pL+ii*xS;}
+  function gy(v){return pT+gH-(v/100)*gH;}
+  var aPts=weeks.map(function(w,ii){return gx(ii)+","+gy(w.pct);}).join(" ");
+  var fPts=gx(0)+","+gy(0)+" "+aPts+" "+gx(n-1)+","+gy(0);
+  h+='<div class="wc"><div class="wc-h">COMPLETION % — LAST 8 WEEKS</div>'
+    +'<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'
+    +[0,50,100].map(function(v){return'<line x1="'+pL+'" y1="'+gy(v)+'" x2="'+(W-8)+'" y2="'+gy(v)+'" stroke="#1e1e1e" stroke-width="1"/>'
+      +'<text x="'+(pL-4)+'" y="'+(gy(v)+3)+'" text-anchor="end" font-size="7" fill="#333">'+v+'%</text>';}).join("")
+    +'<polygon points="'+fPts+'" fill="rgba(110,231,183,.06)"/>'
+    +'<polyline points="'+aPts+'" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  weeks.forEach(function(w,ii){
+    h+='<circle cx="'+gx(ii)+'" cy="'+gy(w.pct)+'" r="3.5" fill="'+(w.pct>=40?"#6ee7b7":"#f87171")+'"/>';
+    h+='<text x="'+gx(ii)+'" y="'+(H-3)+'" text-anchor="middle" font-size="7" fill="#444">'+w.lbl+'</text>';
+  });
+  h+='</svg></div>';
+
+  var weights=Object.keys(data).filter(function(k){return data[k]&&data[k].weight;})
+    .sort(function(a,b){return(data[a].ts||0)-(data[b].ts||0);}).slice(-8);
+  if(!weights.length){h+='<div class="w-empty">LOG WEIGHT TO SEE TREND</div>';}
+  else{
+    var vals=weights.map(function(k){return parseFloat(data[k].weight);});
+    var mn=Math.min.apply(null,vals)-1,mx=Math.max.apply(null,vals)+1,CH=100;
+    function px2(ii){return ii*50+25;}function py2(v){return CH-((v-mn)/(mx-mn))*(CH-24)-12;}
+    var pts2=vals.map(function(v,ii){return px2(ii)+","+py2(v);}).join(" ");
+    var diff=vals[0]-vals[vals.length-1];
+    h+='<div class="wc"><div class="wc-h">WEIGHT TREND (kg)</div>'
+      +'<svg width="100%" height="'+CH+'" viewBox="0 0 '+(weights.length*50)+' '+CH+'" preserveAspectRatio="none">'
+      +'<polyline points="'+pts2+'" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    vals.forEach(function(v,ii){h+='<circle cx="'+px2(ii)+'" cy="'+py2(v)+'" r="4" fill="#6ee7b7"/>';});
+    h+='</svg><div class="wc-foot"><span>'+vals[0]+' kg</span><span class="'+(diff>0?"r":"g")+'">'+Math.abs(diff.toFixed(1))+' kg '+(diff>0?"↑":"↓")+'</span></div></div>';
+  }
+
+  var tip=document.createElement("div");
+  var tips=["Progressive overload = consistent gains. Even 1 extra rep/set matters.","Sleep 7-9h. Muscle grows during rest, not during lifting.","Compound movements (rows, squats) burn more calories & build more muscle.","Protein goal: ~1.6–2.2g per kg of bodyweight for muscle gain.","Deload every 4-6 weeks to prevent overtraining."];
+  h+='<div class="tip"><div class="tip-h">💡 TIP OF THE DAY</div><div class="tip-b">'+tips[new Date().getDay()%tips.length]+'</div></div>';
+  return h;
+}
+
+/* ═══════════════════════════════════════════
+   ACTIVE WORKOUT ENGINE
+═══════════════════════════════════════════ */
+function startWorkout(){
+  var p=getPlan(activeDay);
+  var exs=getExercises(p.label);
+  if(!exs.length)return;
+
+  // init state
+  wo.active=true;
+  wo.day=activeDay;
+  wo.exs=exs;
+  wo.startTime=Date.now();
+  wo.currentExIdx=0;  // kept for compat but not used for locking
+  wo.currentSetIdx=0;
+  wo.doneSets={};
+  wo.repsDone={};
+  wo.setTimers={};
+  wo.setTimerIntervals={};
+  wo.restRemaining=0;
+  wo.volume=0;
+  wo.lastDoneSetKey=null; // track last completed set for rest banner
+
+  // show overlay
+  document.getElementById("workoutOverlay").classList.add("active");
+  document.getElementById("woTitle").textContent=p.emoji+" "+p.label;
+
+  // global stopwatch
+  wo.globalTimerInterval=setInterval(function(){
+    var elapsed=Math.floor((Date.now()-wo.startTime)/1000);
+    document.getElementById("woGlobalTimer").textContent=fmtTimer(elapsed);
+  },1000);
+
+  renderWorkoutBody();
+}
+
+function renderWorkoutBody(){
+  var exs=wo.exs;
+  var totalSets=exs.reduce(function(acc,e){return acc+e.sets;},0);
+  var doneCount=Object.keys(wo.doneSets).filter(function(k){return wo.doneSets[k];}).length;
+  var progPct=totalSets>0?Math.round(doneCount/totalSets*100):0;
+  document.getElementById("woProg").style.width=progPct+"%";
+
+  // Global rest banner (shown at top of list when rest is active)
+  var html="";
+  if(wo.restRemaining>0){
+    var radius=16,circ=2*Math.PI*radius;
+    var dashOffset=circ*(1-wo.restRemaining/wo.restTotalFor);
+    html+='<div class="rest-banner" id="restBanner" style="margin:0 0 14px">'
+      +'<div class="rest-timer-circle">'
+      +'<svg width="44" height="44" viewBox="0 0 44 44">'
+      +'<circle cx="22" cy="22" r="'+radius+'" fill="none" stroke="#1a4025" stroke-width="3"/>'
+      +'<circle cx="22" cy="22" r="'+radius+'" fill="none" stroke="var(--g)" stroke-width="3" stroke-dasharray="'+circ+'" stroke-dashoffset="'+dashOffset+'" stroke-linecap="round"/>'
+      +'</svg>'
+      +'<div class="rest-timer-num">'+wo.restRemaining+'</div>'
+      +'</div>'
+      +'<div class="rest-info"><div class="rest-title">Rest Time</div><div class="rest-sub-lbl">Tap any set when ready 💪</div></div>'
+      +'<button class="rest-skip-btn" id="restSkipBtn">SKIP</button>'
+      +'</div>';
+  }
+
+  // Render all exercises — all always expanded, any undone set is tappable
+  exs.forEach(function(ex,ei){
+    var allSetsDone=true;
+    for(var si=0;si<ex.sets;si++){if(!wo.doneSets[ei+"-"+si]){allSetsDone=false;break;}}
+
+    var doneSetCount=0;
+    for(var si=0;si<ex.sets;si++){if(wo.doneSets[ei+"-"+si])doneSetCount++;}
+    var hasAnyDone=doneSetCount>0;
+
+    var cls="wo-ex-card"+(allSetsDone?" done-ex":hasAnyDone?" active-ex":"");
+    html+='<div class="'+cls+'" id="woCard_'+ei+'">'
+      +'<div class="wo-ex-top">'
+      +'<div class="wo-ex-num">'+(allSetsDone?"✓":(ei+1))+'</div>'
+      +'<div class="wo-ex-name">'+ex.name+'</div>'
+      +'<div class="wo-ex-status">'+(allSetsDone?"Done ✓":doneSetCount+"/"+ex.sets+" sets")+'</div>'
+      +'</div>';
+
+    // Always show sets
+    html+='<div class="wo-sets">';
+    for(var si2=0;si2<ex.sets;si2++){
+      var setKey=ei+"-"+si2;
+      var isDoneSet=!!wo.doneSets[setKey];
+      var targetReps=ex.reps[si2]||ex.reps[0]||12;
+
+      var po=getPO(wo.day,ex.name);
+      var isPO=po.length>0&&po.some(function(v){return v>0;});
+
+      var timerVal=wo.setTimers[setKey]||0;
+      var timerTxt=timerVal>0?fmtTimer(timerVal):"—";
+
+      var setCls="wo-set-row"+(isDoneSet?" done-set":"");
+      html+='<div class="'+setCls+'" id="woSet_'+setKey+'">'
+        +'<div class="wo-set-lbl">SET '+(si2+1)+'</div>'
+        +'<div class="wo-set-target">×'+targetReps+(isPO?' <span style="font-size:9px;color:var(--g)">[PO]</span>':"")+'</div>'
+        +'<span class="wo-set-timer'+(isDoneSet?" done":"")+'">'+timerTxt+'</span>';
+
+      // Rep input always visible for undone sets; also for PO sets even if done
+      if(!isDoneSet||isPO){
+        var repsVal=wo.repsDone[setKey]!==undefined?wo.repsDone[setKey]:targetReps;
+        html+='<input class="wo-rep-input" type="number" inputmode="numeric" id="woRep_'+setKey+'" value="'+repsVal+'" min="0" max="99" placeholder="'+targetReps+'" '+(isDoneSet?'style="opacity:.4" readonly':'')+'/>';
+      }
+
+      html+='<button class="wo-set-done-btn'+(isDoneSet?" done":"")+'\" data-setkey="'+setKey+'"'+(isDoneSet?' style="pointer-events:none"':'')+'>'+
+        (isDoneSet?"✓":"→")+'</button>';
+      html+='</div>';
+    }
+    html+='</div>';
+    html+='</div>';
+  });
+
+  document.getElementById("woExList").innerHTML=html;
+  bindWorkoutBody();
+}
+
+function bindWorkoutBody(){
+  // Set done buttons — any undone set is freely tappable
+  document.querySelectorAll("[data-setkey]").forEach(function(btn){
+    btn.addEventListener("click",function(e){
+      e.stopPropagation();
+      var setKey=btn.dataset.setkey;
+      if(wo.doneSets[setKey])return;
+      var parts=setKey.split("-");
+      var ei=parseInt(parts[0]),si=parseInt(parts[1]);
+      var ex=wo.exs[ei];
+
+      // capture reps
+      var repEl=document.getElementById("woRep_"+setKey);
+      var reps=repEl?parseInt(repEl.value)||ex.reps[si]||12:ex.reps[si]||12;
+      wo.repsDone[setKey]=reps;
+
+      // stop set timer if running
+      if(wo.setTimerIntervals[setKey]){clearInterval(wo.setTimerIntervals[setKey]);delete wo.setTimerIntervals[setKey];}
+      // record elapsed in setTimers so it shows as final time
+      // (timer was already counting since render, keep value)
+
+      // award XP
+      var rect=btn.getBoundingClientRect();
+      addXP(reps,"set",rect.left+rect.width/2,rect.top);
+
+      // volume tracking
+      wo.volume+=reps;
+
+      // mark done
+      wo.doneSets[setKey]=true;
+      wo.lastDoneSetKey=setKey;
+
+      // check if entire exercise is now done and save to log
+      var allExDone=true;
+      for(var si2=0;si2<ex.sets;si2++){if(!wo.doneSets[ei+"-"+si2]){allExDone=false;break;}}
+      if(allExDone){
+        var cExs=Object.assign({},dd(wo.day).exercises||{});
+        cExs[ex.name]=true;
+        patch(wo.day,{exercises:cExs});
+        // save PO reps
+        var po=getPO(wo.day,ex.name);
+        var isPO=po.length>0&&po.some(function(v){return v>0;});
+        if(isPO){
+          var repsArr=[];
+          for(var si3=0;si3<ex.sets;si3++){
+            var v=wo.repsDone[ei+"-"+si3];
+            repsArr.push(v!==undefined?v:(ex.reps[si3]||12));
+          }
+          savePO(wo.day,ex.name,repsArr);
+        }
+      }
+
+      // check if ALL sets across all exercises done
+      var totalSets=wo.exs.reduce(function(acc,e){return acc+e.sets;},0);
+      var doneCount=Object.keys(wo.doneSets).filter(function(k){return wo.doneSets[k];}).length;
+      if(doneCount>=totalSets){
+        wo.restRemaining=0;
+        finishWorkout();
+        return;
+      }
+
+      // start rest timer
+      startRest(reps,"");
+
+      renderWorkoutBody();
+    });
+  });
+
+  // Skip rest
+  var skipBtn=document.getElementById("restSkipBtn");
+  if(skipBtn)skipBtn.addEventListener("click",function(){
+    if(wo.restTimerInterval){clearInterval(wo.restTimerInterval);wo.restTimerInterval=null;}
+    wo.restRemaining=0;
+    renderWorkoutBody();
+  });
+
+  // Rep inputs
+  document.querySelectorAll(".wo-rep-input").forEach(function(inp){
+    inp.addEventListener("change",function(){
+      var setKey=inp.id.replace("woRep_","");
+      wo.repsDone[setKey]=parseInt(inp.value)||0;
+    });
+  });
+}
+
+function startSetTimer(ei,si){
+  var setKey=ei+"-"+si;
+  wo.setTimers[setKey]=0;
+  if(wo.setTimerIntervals[setKey])clearInterval(wo.setTimerIntervals[setKey]);
+  wo.setTimerIntervals[setKey]=setInterval(function(){
+    wo.setTimers[setKey]=(wo.setTimers[setKey]||0)+1;
+    var el=document.querySelector("#woSet_"+setKey+" .wo-set-timer");
+    if(el)el.textContent=fmtTimer(wo.setTimers[setKey]);
+  },1000);
+}
+
+function startRest(targetReps,nextLabel){
+  if(wo.restTimerInterval)clearInterval(wo.restTimerInterval);
+  wo.restRemaining=60;
+  wo.restTotalFor=60;
+  renderWorkoutBody();
+  wo.restTimerInterval=setInterval(function(){
+    wo.restRemaining--;
+    // Update rest banner
+    var numEl=document.querySelector("#restBanner .rest-timer-num");
+    if(numEl)numEl.textContent=wo.restRemaining;
+    // update svg circle
+    var svgCircles=document.querySelectorAll("#restBanner circle");
+    if(svgCircles[1]){
+      var radius=16,circ=2*Math.PI*radius;
+      var dashOffset=circ*(1-wo.restRemaining/wo.restTotalFor);
+      svgCircles[1].setAttribute("stroke-dashoffset",dashOffset);
+    }
+    if(wo.restRemaining<=0){
+      clearInterval(wo.restTimerInterval);
+      wo.restTimerInterval=null;
+      wo.restRemaining=0;
+      if(navigator.vibrate)navigator.vibrate([100,50,100]);
+      renderWorkoutBody();
+    }
+  },1000);
+}
+
+function showEndConfirm(onYes){
+  var bg=document.createElement("div");
+  bg.className="end-confirm-bg";
+  bg.innerHTML='<div class="end-confirm-box">'
+    +'<div class="end-confirm-icon">🏁</div>'
+    +'<div class="end-confirm-title">End Workout?</div>'
+    +'<div class="end-confirm-sub">Progress so far will be saved.</div>'
+    +'<div class="end-confirm-btns">'
+    +'<button class="end-confirm-no" id="endNo">KEEP GOING</button>'
+    +'<button class="end-confirm-yes" id="endYes">END</button>'
+    +'</div></div>';
+  document.body.appendChild(bg);
+  document.getElementById("endYes").addEventListener("click",function(){bg.remove();onYes();});
+  document.getElementById("endNo").addEventListener("click",function(){bg.remove();});
+}
+
+function endWorkout(){
+  showEndConfirm(function(){finishWorkout();});
+}
+
+function finishWorkout(){
+  // stop all timers
+  clearInterval(wo.globalTimerInterval);
+  if(wo.restTimerInterval)clearInterval(wo.restTimerInterval);
+  Object.keys(wo.setTimerIntervals).forEach(function(k){clearInterval(wo.setTimerIntervals[k]);});
+  
+  var duration=Math.floor((Date.now()-wo.startTime)/1000);
+
+  // Save actual reps done for EVERY exercise (not just PO mode) — this powers the main screen display
+  wo.exs.forEach(function(ex,ei){
+    var repsArr=[];
+    var allDone=true;
+    for(var si=0;si<ex.sets;si++){
+      var v=wo.repsDone[ei+"-"+si];
+      if(v===undefined){allDone=false;}
+      repsArr.push(v!==undefined?v:(ex.reps[si]||12));
+    }
+    // Always save actual reps done as PO data so main screen shows real numbers
+    if(Object.keys(wo.repsDone).some(function(k){return k.split("-")[0]===String(ei);})){
+      savePO(wo.day,ex.name,repsArr);
+    }
+    // mark as done in log
+    var cExs=Object.assign({},dd(wo.day).exercises||{});
+    if(allDone){cExs[ex.name]=true;patch(wo.day,{exercises:cExs});}
+    else{
+      // partial: check if any sets done
+      var anyDone=false;for(var si2=0;si2<ex.sets;si2++){if(wo.doneSets[ei+"-"+si2])anyDone=true;}
+      if(anyDone){
+        // Save partial PO
+        savePO(wo.day,ex.name,repsArr);
+        cExs[ex.name]=true;patch(wo.day,{exercises:cExs});
+      }
+    }
+  });
+
+  // XP — already awarded live per set. Calculate for display.
+  var xpEarned=0;
+  wo.exs.forEach(function(ex,ei){
+    for(var si=0;si<ex.sets;si++){
+      if(wo.doneSets[ei+"-"+si]){
+        var reps=wo.repsDone[ei+"-"+si]||ex.reps[si]||12;
+        xpEarned+=reps;
+      }
+    }
+  });
+  if(xpEarned===0)xpEarned=10;
+  gameData.totalWorkouts=(gameData.totalWorkouts||0)+1;
+  // Clear 2x multiplier after workout (it covered this session)
+  if(gameData.doubleXpActive){gameData.doubleXpActive=false;showAchievement("⚡","2× DONE!","Multiplier used — back to normal XP");}
+
+  // Set streak multiplier for TOMORROW based on current streak
+  var streak=calcStreak();
+  if(streak>=1){
+    var tomorrow=new Date();
+    tomorrow.setDate(tomorrow.getDate()+1);
+    gameData.streakMultiplierDay=tomorrow.toDateString();
+    gameData.streakMultiplier=Math.round((1+streak*0.1)*10)/10;
+  }
+
+  save(); // don't call addXP again - already awarded per set
+
+  // save duration
+  patch(wo.day,{woDuration:duration,woVolume:wo.volume});
+
+  // show complete overlay
+  document.getElementById("workoutOverlay").classList.remove("active");
+  document.getElementById("completeOverlay").classList.add("active");
+  document.getElementById("coDuration").textContent=fmtSecs(duration);
+  document.getElementById("coXP").textContent=xpEarned;
+  document.getElementById("coVol").textContent=wo.volume+" reps";
+  document.getElementById("coSub").textContent="Crushed it 💪"+(streak>=1?" "+Math.round((1+streak*0.1)*10)/10+"× XP tomorrow 🔥":"");
+
+  checkAchievements();
+  wo.active=false;
+}
+
+/* ═══════════════════════════════════════════
+   SHEETS
+═══════════════════════════════════════════ */
+function closeSheet(){document.getElementById("sheetRoot").innerHTML="";}
+function openSheet(inner){
+  var r=document.getElementById("sheetRoot");
+  r.innerHTML='<div class="sheet-bg" id="shBg"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-inner">'+inner+'</div></div></div>';
+  document.getElementById("shBg").addEventListener("click",function(e){if(e.target===this)closeSheet();});
+}
+
+function openRestSheet(){
+  var p=getPlan(activeDay);
+  var owned=gameData.ownedItems||{};
+  var hasSkipDay=owned["free_skip_day"]&&owned["free_skip_day"].count>0;
+
+  // If they have a Free Skip Day token, use it immediately — no need to reschedule
+  if(hasSkipDay){
+    owned["free_skip_day"].count--;
+    if(owned["free_skip_day"].count<=0)delete owned["free_skip_day"];
+    gameData.ownedItems=owned;
+    data[weekId(weekOff)+"-"+activeDay]="skipped";
+    save();
+    showAchievement("🎟️","DAY SKIPPED!","Free Skip Day used — no penalty, no rescheduling 🎉");
+    render();
+    return;
+  }
+
+  // No token — show the reschedule sheet
+  var h='<div class="sheet-title">🛌 Rest Day</div>'
+    +'<div class="sheet-sub">WHAT DO YOU WANT TO DO?</div>';
+
+  h+='<div style="font-size:9px;color:var(--t3);letter-spacing:1px;margin-bottom:8px">📅 SHIFT TO ANOTHER DAY (free, no XP lost)</div>'
+    +'<div class="day-pick-grid">';
+  DAYS.forEach(function(day){
+    if(day===activeDay)return;
+    var tp=getPlan(day);
+    var ok=(tp.type==="walk")&&!isRestSwapped(day);
+    h+='<button class="dpick'+(ok?"":" off")+'" data-rswap="'+day+'">'+day+'</button>';
+  });
+  h+='</div><div style="font-size:10px;color:var(--t3);text-align:center;margin-bottom:4px">Walk still counts on the original day 🚶</div>'
+    +'<div style="font-size:10px;color:var(--t3);text-align:center;margin-top:8px">💡 Buy a <b style="color:var(--xp)">Free Skip Day</b> from the Shop to skip without rescheduling.</div>';
+
+  openSheet(h);
+
+  document.querySelectorAll("[data-rswap]").forEach(function(btn){
+    btn.addEventListener("click",function(){setSwap(activeDay,btn.dataset.rswap);closeSheet();render();});
+  });
+}
+
+function openEditSheet(exName){
+  var p=getPlan(activeDay),label=p.label;
+  var exs=getExercises(label);
+  var ex=exs.filter(function(e){return e.name===exName;})[0];
+  if(!ex)return;
+  var po=getPO(activeDay,exName);
+  var hasPO=po.length>0&&po.some(function(v){return v>0;});
+
+  function buildSheet(isPOMode,curSets,curReps,curPO){
+    var h='<div class="sheet-title">'+exName+'</div><div class="sheet-sub">EDIT EXERCISE</div>'
+      +'<label class="f-label">NAME</label><input class="f-input" id="exNm" value="'+esc(exName)+'"/>';
+    if(!isPOMode){
+      h+='<label class="f-label">SETS</label><input class="f-input" id="exSets" type="number" inputmode="numeric" value="'+curSets+'"/>'
+        +'<label class="f-label">REPS PER SET</label><div class="set-grid" id="repsGrid">';
+      for(var i=0;i<curSets;i++){
+        h+='<div class="set-r"><span class="set-r-lbl">SET '+(i+1)+'</span>'
+          +'<input class="set-r-in" type="number" inputmode="numeric" data-si="'+i+'" value="'+(curReps[i]||12)+'"/></div>';
+      }
+      h+='</div>';
+    } else {
+      h+='<div style="font-size:10px;color:var(--g);letter-spacing:1px;margin-bottom:10px">📈 LOG REPS DONE THIS SESSION</div>'
+        +'<div class="set-grid" id="poGrid">';
+      for(var j=0;j<curSets;j++){
+        h+='<div class="set-r"><span class="set-r-lbl" style="color:#2d7a52">SET '+(j+1)+'</span>'
+          +'<input class="set-r-in po-in" type="number" inputmode="numeric" data-pi="'+j+'" value="'+(curPO[j]||"")+'" placeholder="reps done"/></div>';
+      }
+      h+='</div>';
+    }
+    h+='<div class="po-toggle'+(isPOMode?" on":"")+'" id="poToggle">'
+      +'<span class="po-toggle-lbl">📈 Progressive Overload</span>'
+      +'<div class="po-switch"></div></div>'
+      +'<label class="f-label">APPLY TO</label>'
+      +'<div class="scope"><button class="scope-opt on" id="scopeW">THIS WEEK</button><button class="scope-opt" id="scopeP">PERMANENT</button></div>'
+      +'<button class="sb prim" id="saveEx">SAVE</button>'
+      +'<button class="sb del" id="delEx">DELETE EXERCISE</button>'
+      +'<button class="sb sec" id="cancelEx">CANCEL</button>';
+    return h;
+  }
+
+  var isPOMode=hasPO;
+  openSheet(buildSheet(isPOMode,ex.sets,ex.reps,po));
+  var scope="week";
+  function bindSheet(){
+    var sw=document.getElementById("scopeW"),sp=document.getElementById("scopeP");
+    if(sw)sw.addEventListener("click",function(){scope="week";sw.classList.add("on");sp.classList.remove("on");});
+    if(sp)sp.addEventListener("click",function(){scope="perm";sp.classList.add("on");sw.classList.remove("on");});
+    var poTog=document.getElementById("poToggle");
+    if(poTog)poTog.addEventListener("click",function(){
+      isPOMode=!isPOMode;
+      var cs=parseInt((document.getElementById("exSets")||{value:ex.sets}).value)||ex.sets;
+      var cr=getRepsFromGrid()||ex.reps;var cp=getPOFromGrid()||po;
+      openSheet(buildSheet(isPOMode,cs,cr,cp));bindSheet();
+    });
+    var sIn=document.getElementById("exSets");
+    if(sIn)sIn.addEventListener("input",function(){
+      var ns=parseInt(this.value)||1,cr=getRepsFromGrid(),rg=document.getElementById("repsGrid");
+      if(!rg)return;var rh="";
+      for(var k=0;k<ns;k++){rh+='<div class="set-r"><span class="set-r-lbl">SET '+(k+1)+'</span><input class="set-r-in" type="number" inputmode="numeric" data-si="'+k+'" value="'+(cr&&cr[k]?cr[k]:12)+'"/></div>';}
+      rg.innerHTML=rh;
+    });
+    var saveBtn=document.getElementById("saveEx");
+    if(saveBtn)saveBtn.addEventListener("click",function(){
+      var newName=(document.getElementById("exNm")||{value:exName}).value.trim()||exName;
+      var sets=parseInt((document.getElementById("exSets")||{value:ex.sets}).value)||ex.sets;
+      var reps=isPOMode?ex.reps:getRepsFromGrid()||ex.reps;
+      var poVals=isPOMode?getPOFromGrid():[];
+      if(poVals.length)savePO(activeDay,exName,poVals);
+      var exsList=getExercises(label);
+      var idx=exsList.findIndex(function(e){return e.name===exName;});
+      if(idx>=0)exsList[idx]={name:newName,sets:sets,reps:reps};
+      saveExercises(label,exsList,scope);
+      if(newName!==exName){var d2=dd(activeDay),ce=Object.assign({},d2.exercises||{});if(ce[exName]!==undefined){ce[newName]=ce[exName];delete ce[exName];}patch(activeDay,{exercises:ce});var oldPO=getPO(activeDay,exName);if(oldPO.length)savePO(activeDay,newName,oldPO);}
+      closeSheet();render();
+    });
+    var delBtn=document.getElementById("delEx");
+    if(delBtn)delBtn.addEventListener("click",function(){
+      if(!confirm('Delete "'+exName+'"?'))return;
+      var exsList=getExercises(label).filter(function(e){return e.name!==exName;});
+      saveExercises(label,exsList,scope);
+      var d2=dd(activeDay),ce=Object.assign({},d2.exercises||{});delete ce[exName];patch(activeDay,{exercises:ce});
+      closeSheet();render();
+    });
+    var canBtn=document.getElementById("cancelEx");
+    if(canBtn)canBtn.addEventListener("click",closeSheet);
+  }
+  bindSheet();
+  function getRepsFromGrid(){var arr=[];document.querySelectorAll("[data-si]").forEach(function(i){arr[parseInt(i.dataset.si)]=parseInt(i.value)||12;});return arr.length?arr:null;}
+  function getPOFromGrid(){var arr=[];document.querySelectorAll("[data-pi]").forEach(function(i){var v=parseInt(i.value);if(!isNaN(v))arr[parseInt(i.dataset.pi)]=v;});return arr;}
+}
+
+function openAddSheet(){
+  var p=getPlan(activeDay),label=p.label;
+  var h='<div class="sheet-title">+ Add Exercise</div>'
+    +'<div class="sheet-sub">'+label.toUpperCase()+'</div>'
+    +'<label class="f-label">NAME</label><input class="f-input" id="newNm" placeholder="e.g. Incline Press"/>'
+    +'<label class="f-label">SETS</label><input class="f-input" id="newSets" type="number" inputmode="numeric" value="3"/>'
+    +'<label class="f-label">REPS PER SET</label>'
+    +'<div class="set-grid" id="newRepsGrid">'
+    +'<div class="set-r"><span class="set-r-lbl">SET 1</span><input class="set-r-in" type="number" inputmode="numeric" data-ni="0" value="12"/></div>'
+    +'<div class="set-r"><span class="set-r-lbl">SET 2</span><input class="set-r-in" type="number" inputmode="numeric" data-ni="1" value="12"/></div>'
+    +'<div class="set-r"><span class="set-r-lbl">SET 3</span><input class="set-r-in" type="number" inputmode="numeric" data-ni="2" value="12"/></div>'
+    +'</div>'
+    +'<label class="f-label">APPLY TO</label>'
+    +'<div class="scope"><button class="scope-opt on" id="scopeW">THIS WEEK</button><button class="scope-opt" id="scopeP">PERMANENT</button></div>'
+    +'<button class="sb prim" id="addConfirm">ADD</button>'
+    +'<button class="sb sec" id="addCancel">CANCEL</button>';
+  openSheet(h);
+  var scope="week";
+  document.getElementById("scopeW").addEventListener("click",function(){scope="week";this.classList.add("on");document.getElementById("scopeP").classList.remove("on");});
+  document.getElementById("scopeP").addEventListener("click",function(){scope="perm";this.classList.add("on");document.getElementById("scopeW").classList.remove("on");});
+  document.getElementById("newSets").addEventListener("input",function(){
+    var ns=parseInt(this.value)||1,g=document.getElementById("newRepsGrid"),rh="";
+    for(var k=0;k<ns;k++)rh+='<div class="set-r"><span class="set-r-lbl">SET '+(k+1)+'</span><input class="set-r-in" type="number" inputmode="numeric" data-ni="'+k+'" value="12"/></div>';
+    g.innerHTML=rh;
+  });
+  document.getElementById("addCancel").addEventListener("click",closeSheet);
+  document.getElementById("addConfirm").addEventListener("click",function(){
+    var name=(document.getElementById("newNm").value||"").trim();if(!name)return;
+    var sets=parseInt(document.getElementById("newSets").value)||3;var reps=[];
+    document.querySelectorAll("[data-ni]").forEach(function(i){reps[parseInt(i.dataset.ni)]=parseInt(i.value)||12;});
+    var exsList=getExercises(label);exsList.push({name:name,sets:sets,reps:reps});
+    saveExercises(label,exsList,scope);closeSheet();render();
+  });
+}
+
+/* ─ SHOP VIEW ─ */
+function getShopItems(){
+  var s=getStore();
+  return s.shopItems||DEFAULT_SHOP_ITEMS;
+}
+function getOwnedItems(){
+  return gameData.ownedItems||{};
+}
+function saveShopItems(items){
+  var s=getStoreFull();
+  localStorage.setItem("gl3",JSON.stringify({d:data,g:gameData,shopItems:items,ringGoalsTemp:s.ringGoalsTemp,ringGoalsPerm:s.ringGoalsPerm}));
+}
+
+function renderShop(){
+  var xp=gameData.xp||0;
+  var spendable=gameData.spendableXP||0;
+  var freeUnlocks=gameData.freeUnlocks||0;
+  var items=getShopItems();
+  var owned=getOwnedItems();
+  
+  var h='<div class="shop-h">🛒 XP Shop</div>'
+    +'<div class="shop-sub">Spend your hard-earned XP on rewards</div>'
+    +'<div class="shop-xp-row">'
+    +'<div class="shop-bal-box spend"><span style="font-size:15px">💸</span><div><div style="font-family:\'Syne\',sans-serif;font-size:16px;font-weight:800;color:#4ade80">'+spendable+'</div><div style="font-size:9px;color:#2d7a52">SPENDABLE XP</div></div></div>'
+    +'<div class="shop-bal-box earn"><span style="font-size:15px">💎</span><div><div style="font-family:\'Syne\',sans-serif;font-size:16px;font-weight:800;color:var(--xp)">'+xp+'</div><div style="font-size:9px;color:#7c5fba">TOTAL EARNED XP</div></div></div>'
+    +(freeUnlocks>0?'<div class="shop-bal-box" style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25)"><span style="font-size:15px">🎁</span><div><div style="font-family:\'Syne\',sans-serif;font-size:16px;font-weight:800;color:var(--amber)">'+freeUnlocks+'</div><div style="font-size:9px;color:#d97706">FREE UNLOCKS</div></div></div>':"")
+    +'</div>';
+  
+  // Permanent rewards section
+  h+='<div class="sec">SIGNATURE REWARDS</div>';
+  PERMANENT_SHOP_ITEMS.forEach(function(item,idx){
+    var canAfford=spendable>=item.cost;
+    var isOwned=owned[item.id]&&owned[item.id].count>0;
+    // Always show buy button; if owned also show use button
+    var buyBtnCls=canAfford?"":"cant";
+    var buyBtnTxt=canAfford?"BUY "+item.cost+" XP":""+item.cost+" XP";
+    h+='<div class="shop-item" style="border-color:rgba(167,139,250,0.2);background:rgba(124,58,237,0.05);">'
+      +'<div class="shop-item-em">'+item.emoji+'</div>'
+      +'<div class="shop-item-body">'
+      +'<div class="shop-item-name" style="color:var(--xp)">'+item.name+'</div>'
+      +'<div class="shop-item-desc">'+item.desc+'</div>'
+      +(isOwned?'<div class="shop-item-owned">×'+owned[item.id].count+' in stock</div>':"")
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">'
+      +(isOwned?'<button class="shop-buy-btn owned" data-permuse="'+idx+'">USE 🎉</button>':"")
+      +'<button class="shop-buy-btn '+buyBtnCls+'" data-permidx="'+idx+'" style="'+(buyBtnCls===""?"background:linear-gradient(135deg,var(--xp),var(--xpd))":"")+'">'+buyBtnTxt+'</button>'
+      +(freeUnlocks>0?'<button class="free-unlock-shop-btn" data-permfree="'+idx+'">🎁 FREE UNLOCK</button>':"")
+      +'</div>'
+      +'</div>';
+  });
+
+  h+='<div class="sec">REWARDS</div>';
+  
+  items.forEach(function(item,idx){
+    var canAfford=spendable>=item.cost;
+    var isOwned=owned[item.id]&&owned[item.id].count>0;
+    var buyBtnCls=canAfford?"":"cant";
+    var buyBtnTxt=canAfford?"BUY "+item.cost+" XP":""+item.cost+" XP";
+    h+='<div class="shop-item">'
+      +'<div class="shop-em-wrap" id="emwrap_'+idx+'" style="position:relative;width:44px;height:44px;flex-shrink:0;cursor:pointer">'
+      +'<div class="shop-em-face" id="emface_'+idx+'" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;transition:opacity .15s">'+item.emoji+'</div>'
+      +'<div class="shop-em-trash" id="emtrash_'+idx+'" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:0;transition:opacity .15s;pointer-events:none">🗑️</div>'
+      +'</div>'
+      +'<div class="shop-item-body">'
+      +'<div class="shop-item-name">'+item.name+'</div>'
+      +'<div class="shop-item-desc">'+item.desc+'</div>'
+      +(isOwned?'<div class="shop-item-owned">×'+owned[item.id].count+' in stock</div>':"")
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">'
+      +(isOwned?'<button class="shop-buy-btn owned" data-shopuse="'+idx+'">USE 🎉</button>':"")
+      +'<button class="shop-buy-btn '+buyBtnCls+'" data-shopidx="'+idx+'">'+buyBtnTxt+'</button>'
+      +(freeUnlocks>0?'<button class="free-unlock-shop-btn" data-shopfree="'+idx+'">🎁 FREE UNLOCK</button>':"")
+      +'</div>'
+      +'</div>';
+  });
+  
+  h+='<button class="shop-add-btn" id="shopAddBtn">+ Add Custom Reward</button>';
+  
+  var history=(gameData.shopHistory||[]).slice(-5).reverse();
+  if(history.length){
+    h+='<div class="shop-owned-sec"><div class="shop-owned-h">RECENT PURCHASES</div>';
+    history.forEach(function(entry){
+      h+='<div class="shop-owned-item">'
+        +'<div class="shop-owned-em">'+entry.emoji+'</div>'
+        +'<div><div class="shop-owned-name">'+entry.name+'</div>'
+        +'<div class="shop-owned-date">'+entry.date+'</div></div>'
+        +'</div>';
+    });
+    h+='</div>';
+  }
+  
+  return h;
+}
+
+/* ═══════════════════════════════════════════
+   BIND
+═══════════════════════════════════════════ */
+function bind(){
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click",function(){
+      if(t.dataset.v==="log"){
+        // Always jump to today's actual day
+        weekOff=0;
+        activeDay=todayName();
+      }
+      view=t.dataset.v;render();
+    });
+  });
+
+  if(view==="week"){
+    var wPrev=document.getElementById("wPrev"),wNext=document.getElementById("wNext");
+    if(wPrev)wPrev.addEventListener("click",function(){weekOff--;render();});
+    if(wNext)wNext.addEventListener("click",function(){if(weekOff<1){weekOff++;render();}});
+    document.querySelectorAll(".day-card:not(.is-rest)").forEach(function(card){
+      card.addEventListener("click",function(e){
+        activeDay=card.dataset.day;
+        // If clicking a future week card, stay on week view so weekOff context is preserved
+        // If clicking current or past week, switch to log view at weekOff=0
+        if(weekOff<=0){view="log";}
+        render();
+      });
+    });
+  }
+
+  if(view==="shop"){
+    // Helper: grant item free (no XP cost)
+    function grantFree(item){
+      if(!gameData.freeUnlocks||gameData.freeUnlocks<=0)return;
+      if(!gameData.ownedItems)gameData.ownedItems={};
+      if(!gameData.ownedItems[item.id])gameData.ownedItems[item.id]={count:0};
+      gameData.ownedItems[item.id].count++;
+      gameData.freeUnlocks=Math.max(0,(gameData.freeUnlocks||1)-1);
+      if(!gameData.shopHistory)gameData.shopHistory=[];
+      var now=new Date();
+      gameData.shopHistory.push({id:item.id,emoji:item.emoji,name:item.name,
+        date:now.getDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()]+" (FREE 🎁)"});
+      showAchievement(item.emoji,"FREE UNLOCK!",item.name+" unlocked for free 🎁");
+      save();updateHeader();render();
+    }
+
+    // Permanent rewards — use (activate) owned item
+    document.querySelectorAll("[data-permuse]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=parseInt(btn.dataset.permuse);
+        var item=PERMANENT_SHOP_ITEMS[idx];
+        if(!item)return;
+        var owned=gameData.ownedItems||{};
+        if(!(owned[item.id]&&owned[item.id].count>0))return;
+        owned[item.id].count--;
+        if(owned[item.id].count<=0)delete owned[item.id];
+        gameData.ownedItems=owned;
+        if(item.id==="free_skip_day"){gameData.freeSkipActive=true;}
+        if(item.id==="double_xp"){gameData.doubleXpActive=true;}
+        showAchievement(item.emoji,"ACTIVATED!",item.name+" is now active 🔥");
+        save();render();
+      });
+    });
+
+    // Regular rewards — use (redeem) owned item
+    document.querySelectorAll("[data-shopuse]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=parseInt(btn.dataset.shopuse);
+        var items=getShopItems();
+        var item=items[idx];
+        if(!item)return;
+        var owned=gameData.ownedItems||{};
+        if(!(owned[item.id]&&owned[item.id].count>0))return;
+        owned[item.id].count--;
+        if(owned[item.id].count<=0)delete owned[item.id];
+        gameData.ownedItems=owned;
+        showAchievement(item.emoji,"REDEEMED!",item.name+" used — enjoy! 🎉");
+        save();render();
+      });
+    });
+
+    // Permanent rewards — buy with spendableXP
+    document.querySelectorAll("[data-permidx]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=parseInt(btn.dataset.permidx);
+        var item=PERMANENT_SHOP_ITEMS[idx];
+        if(!item)return;
+        var spendable=gameData.spendableXP||0;
+        if(spendable<item.cost)return;
+        gameData.spendableXP=spendable-item.cost;
+        if(!gameData.ownedItems)gameData.ownedItems={};
+        if(!gameData.ownedItems[item.id])gameData.ownedItems[item.id]={count:0};
+        gameData.ownedItems[item.id].count++;
+        if(!gameData.shopHistory)gameData.shopHistory=[];
+        var now=new Date();
+        gameData.shopHistory.push({id:item.id,emoji:item.emoji,name:item.name,
+          date:now.getDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()]});
+        showAchievement(item.emoji,"PURCHASED!",item.name+" added to your stash");
+        save();updateHeader();render();
+      });
+    });
+
+    // Permanent rewards — free unlock button
+    document.querySelectorAll("[data-permfree]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=parseInt(btn.dataset.permfree);
+        var item=PERMANENT_SHOP_ITEMS[idx];
+        if(!item)return;
+        grantFree(item);
+      });
+    });
+
+    document.querySelectorAll("[data-shopidx]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=parseInt(btn.dataset.shopidx);
+        var items=getShopItems();
+        var item=items[idx];
+        if(!item)return;
+        var spendable=gameData.spendableXP||0;
+        if(spendable<item.cost)return;
+        gameData.spendableXP=spendable-item.cost;
+        if(!gameData.ownedItems)gameData.ownedItems={};
+        if(!gameData.ownedItems[item.id])gameData.ownedItems[item.id]={count:0};
+        gameData.ownedItems[item.id].count++;
+        if(!gameData.shopHistory)gameData.shopHistory=[];
+        var now=new Date();
+        gameData.shopHistory.push({id:item.id,emoji:item.emoji,name:item.name,
+          date:now.getDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()]});
+        showAchievement(item.emoji,"PURCHASED!",item.name+" added to your stash");
+        save();updateHeader();render();
+      });
+    });
+
+    // Reward items — free unlock button
+    document.querySelectorAll("[data-shopfree]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=parseInt(btn.dataset.shopfree);
+        var items=getShopItems();
+        var item=items[idx];
+        if(!item)return;
+        grantFree(item);
+      });
+    });
+    var shopAddBtn=document.getElementById("shopAddBtn");
+    if(shopAddBtn)shopAddBtn.addEventListener("click",openAddShopItemSheet);
+
+    // Emoji -> trash -> confirm delete
+    var delTimers={};
+    var trashState={}; // idx -> true if trash showing
+    var items_snap=getShopItems();
+    items_snap.forEach(function(item,idx){
+      var face=document.getElementById("emface_"+idx);
+      var trash=document.getElementById("emtrash_"+idx);
+      if(!face||!trash)return;
+
+      function showTrash(){
+        face.style.opacity="0";
+        face.style.pointerEvents="none";
+        trash.style.opacity="1";
+        trash.style.pointerEvents="auto";
+        trashState[idx]=true;
+        if(delTimers[idx])clearTimeout(delTimers[idx]);
+        delTimers[idx]=setTimeout(function(){hideTrash();},5000);
+      }
+
+      function hideTrash(){
+        face.style.opacity="1";
+        face.style.pointerEvents="auto";
+        trash.style.opacity="0";
+        trash.style.pointerEvents="none";
+        trashState[idx]=false;
+        if(delTimers[idx]){clearTimeout(delTimers[idx]);delTimers[idx]=null;}
+      }
+
+      face.addEventListener("click",function(e){
+        e.stopPropagation();
+        showTrash();
+      });
+
+      trash.addEventListener("click",function(e){
+        e.stopPropagation();
+        if(delTimers[idx]){clearTimeout(delTimers[idx]);delTimers[idx]=null;}
+        // Show built-in confirm popup
+        showDeleteConfirm(item.name, function(){
+          var current=getShopItems();
+          current.splice(idx,1);
+          var s=getStoreFull();
+          localStorage.setItem("gl3",JSON.stringify({d:data,g:gameData,shopItems:current,ringGoalsTemp:s.ringGoalsTemp,ringGoalsPerm:s.ringGoalsPerm}));
+          render();
+        }, function(){
+          hideTrash();
+        });
+      });
+    });
+  }
+
+  if(view==="log"){
+    document.querySelectorAll("[data-ld]").forEach(function(btn){
+      btn.addEventListener("click",function(){activeDay=btn.dataset.ld;render();});
+    });
+
+    // start workout
+    var swBtn=document.getElementById("startWorkoutBtn");
+    if(swBtn)swBtn.addEventListener("click",startWorkout);
+
+    document.querySelectorAll(".ex-item").forEach(function(row){
+      row.addEventListener("click",function(e){
+        if(e.target.closest(".ex-btn"))return;
+        var ex=row.dataset.ex,d=dd(activeDay),cExs=Object.assign({},d.exercises||{});
+        cExs[ex]=!cExs[ex];patch(activeDay,{exercises:cExs});render();
+      });
+    });
+    document.querySelectorAll(".ex-btn[data-exedit]").forEach(function(btn){
+      btn.addEventListener("click",function(e){e.stopPropagation();openEditSheet(btn.dataset.exedit);});
+    });
+    var addRow=document.getElementById("addExBtn");
+    if(addRow)addRow.addEventListener("click",openAddSheet);
+    var restBtn=document.getElementById("restDayBtn");
+    if(restBtn)restBtn.addEventListener("click",openRestSheet);
+    var undoBtn=document.getElementById("undoRestBtn");
+    if(undoBtn)undoBtn.addEventListener("click",function(){
+      var wid=weekId(weekOff);
+      Object.keys(data).forEach(function(k){
+        if(k.indexOf(wid+"-")===0&&!k.endsWith("-data")){
+          var fd=k.replace(wid+"-","");
+          if(fd===activeDay||(typeof data[k]==="string"&&data[k]===activeDay)){
+            setSwap(fd,null);
+          }
+        }
+      });
+      render();
+    });
+    var walkBtn=document.getElementById("walkBtn");
+    if(walkBtn)walkBtn.addEventListener("click",function(){
+      var wasDone=dd(activeDay).walk1;
+      patch(activeDay,{walk1:!wasDone});
+      if(!wasDone){
+        // Only award XP if not already awarded this session
+        var alreadyAwarded=dd(activeDay).walkXpAwarded||0;
+        if(alreadyAwarded<=0){
+          var walkKcal=parseFloat(dd(activeDay).walkKcal)||0;
+          var walkXP=walkKcal>0?Math.round(walkKcal*XP_WALK_PER_KCAL_PCT):30;
+          addXP(walkXP,"walk",window.innerWidth/2,200);
+          patch(activeDay,{walkXpAwarded:walkXP});
+          // Clear 2x multiplier after walk (if still active after workout used it, walk consumes it)
+          if(gameData.doubleXpActive){gameData.doubleXpActive=false;save();showAchievement("⚡","2× DONE!","Walk boosted! Multiplier now used up");}
+          checkAchievements();
+        }
+      } else {
+        // Deselecting: remove previously awarded walk XP
+        var prevXP=dd(activeDay).walkXpAwarded||0;
+        if(prevXP>0){addXP(-prevXP,"walk_deduct",window.innerWidth/2,200);}
+        patch(activeDay,{walkXpAwarded:0});
+      }
+      render();
+    });
+    function updateTotal(){
+      var ex=parseFloat((document.getElementById("exKcalIn")||{value:0}).value)||0;
+      var wk=parseFloat((document.getElementById("walkKcalIn")||{value:0}).value)||0;
+      var disp=document.getElementById("totalKcalDisp");
+      if(disp)disp.textContent=ex+wk;
+    }
+    var exKI=document.getElementById("exKcalIn");
+    if(exKI){exKI.addEventListener("input",updateTotal);exKI.addEventListener("change",function(){patch(activeDay,{exKcal:this.value});updateTotal();});}
+    var wkKI=document.getElementById("walkKcalIn");
+    if(wkKI){wkKI.addEventListener("input",updateTotal);wkKI.addEventListener("change",function(){patch(activeDay,{walkKcal:this.value});updateTotal();});}
+    var wmMove=document.getElementById("wmMove");
+    if(wmMove)wmMove.addEventListener("change",function(){var wm=Object.assign({},dd(activeDay).watchMetrics||{});wm.move=this.value;patch(activeDay,{watchMetrics:wm});checkRingsComplete();});
+    var wmExercise=document.getElementById("wmExercise");
+    if(wmExercise)wmExercise.addEventListener("change",function(){var wm=Object.assign({},dd(activeDay).watchMetrics||{});wm.exercise=this.value;patch(activeDay,{watchMetrics:wm});checkRingsComplete();});
+    var wmStand=document.getElementById("wmStand");
+    if(wmStand)wmStand.addEventListener("change",function(){var wm=Object.assign({},dd(activeDay).watchMetrics||{});wm.stand=this.value;patch(activeDay,{watchMetrics:wm});checkRingsComplete();});
+    var wIn=document.getElementById("wIn");
+    if(wIn)wIn.addEventListener("change",function(){patch(activeDay,{weight:this.value,ts:Date.now()});});
+    var nIn=document.getElementById("nIn");
+    if(nIn)nIn.addEventListener("input",function(){patch(activeDay,{note:this.value});});
+    var ringGoalsBtn=document.getElementById("ringGoalsEditBtn");
+    if(ringGoalsBtn)ringGoalsBtn.addEventListener("click",function(e){e.stopPropagation();openRingGoalsSheet();});
+  }
+}
+
+/* Workout overlay end button */
+document.getElementById("woEndBtn").addEventListener("click",endWorkout);
+
+/* Complete overlay continue */
+document.getElementById("coContinueBtn").addEventListener("click",function(){
+  document.getElementById("completeOverlay").classList.remove("active");
+  render();
+});
+
+if(!Array.prototype.findIndex){Array.prototype.findIndex=function(fn){for(var i=0;i<this.length;i++)if(fn(this[i],i,this))return i;return -1;};}
+
+function openAddShopItemSheet(){
+  var h='<div class="sheet-title">+ Add Reward</div>'
+    +'<div class="sheet-sub">CREATE A CUSTOM SHOP ITEM</div>'
+    +'<label class="f-label">EMOJI</label><input class="f-input" id="siEmoji" placeholder="🎮" maxlength="2" value="🎁"/>'
+    +'<label class="f-label">NAME</label><input class="f-input" id="siName" placeholder="e.g. Movie Night"/>'
+    +'<label class="f-label">DESCRIPTION</label><input class="f-input" id="siDesc" placeholder="What is this reward?"/>'
+    +'<label class="f-label">COST (XP)</label><input class="f-input" id="siCost" type="number" inputmode="numeric" placeholder="100" value="100"/>'
+    +'<button class="sb prim" id="siAdd">ADD REWARD</button>'
+    +'<button class="sb sec" id="siCancel">CANCEL</button>';
+  openSheet(h);
+  document.getElementById("siCancel").addEventListener("click",closeSheet);
+  document.getElementById("siAdd").addEventListener("click",function(){
+    var emoji=(document.getElementById("siEmoji").value||"🎁").trim();
+    var name=(document.getElementById("siName").value||"").trim();
+    var desc=(document.getElementById("siDesc").value||"").trim();
+    var cost=parseInt(document.getElementById("siCost").value)||100;
+    if(!name)return;
+    var items=getShopItems();
+    var id="custom_"+Date.now();
+    items.push({id:id,emoji:emoji,name:name,desc:desc,cost:cost});
+    var s=getStoreFull();
+    localStorage.setItem("gl3",JSON.stringify({d:data,g:gameData,shopItems:items,ringGoalsTemp:s.ringGoalsTemp,ringGoalsPerm:s.ringGoalsPerm}));
+    closeSheet();render();
+  });
+}
+
+function showDeleteConfirm(name, onYes, onNo){
+  var bg=document.createElement("div");
+  bg.className="del-confirm-bg";
+  bg.innerHTML='<div class="del-confirm-box">'
+    +'<div class="del-confirm-icon">🗑️</div>'
+    +'<div class="del-confirm-title">Delete Reward?</div>'
+    +'<div class="del-confirm-sub">"'+name+'" will be permanently removed.</div>'
+    +'<div class="del-confirm-btns">'
+    +'<button class="del-confirm-no" id="delNo">CANCEL</button>'
+    +'<button class="del-confirm-yes" id="delYes">DELETE</button>'
+    +'</div></div>';
+  document.body.appendChild(bg);
+  document.getElementById("delYes").addEventListener("click",function(){bg.remove();onYes();});
+  document.getElementById("delNo").addEventListener("click",function(){bg.remove();if(onNo)onNo();});
+}
+
+function checkRingsComplete(){
+  var d2=dd(activeDay);
+  if(d2.ringsXpAwarded)return; // already awarded today
+  var wm2=d2.watchMetrics||{};
+  var goals2=getRingGoals(dk(activeDay));
+  var mv=parseFloat(wm2.move)||0;
+  var ex=parseFloat(wm2.exercise)||0;
+  var st=parseFloat(wm2.stand)||0;
+  if(mv>=goals2.move&&ex>=goals2.exercise&&st>=goals2.stand){
+    patch(activeDay,{ringsXpAwarded:true});
+    addXP(XP_RINGS_COMPLETE,"rings",window.innerWidth/2,200);
+    showAchievement("🎯","RINGS CLOSED!","All 3 rings complete! +"+XP_RINGS_COMPLETE+" XP");
+    render();
+  }
+}
+
+function openRingGoalsSheet(){
+  var dayKey=dk(activeDay);
+  var goals=getRingGoals(dayKey);
+  var h='<div class="sheet-title">🎯 Ring Goals</div>'
+    +'<div class="sheet-sub">EDIT DAILY TARGETS</div>'
+    +'<label class="f-label">🔴 MOVE (kcal)</label>'
+    +'<input class="f-input" id="rgMove" type="number" inputmode="decimal" value="'+(goals.move||500)+'"/>'
+    +'<label class="f-label">🟢 EXERCISE (min)</label>'
+    +'<input class="f-input" id="rgExercise" type="number" inputmode="decimal" value="'+(goals.exercise||60)+'"/>'
+    +'<label class="f-label">🔵 STAND (hrs)</label>'
+    +'<input class="f-input" id="rgStand" type="number" inputmode="decimal" value="'+(goals.stand||8)+'"/>'
+    +'<label class="f-label">APPLY TO</label>'
+    +'<div class="scope"><button class="scope-opt on" id="rgScopeT">TODAY ONLY</button><button class="scope-opt" id="rgScopeP">PERMANENT</button></div>'
+    +'<button class="sb prim" id="rgSave">SAVE GOALS</button>'
+    +'<button class="sb sec" id="rgCancel">CANCEL</button>';
+  openSheet(h);
+  var scope="temp";
+  document.getElementById("rgScopeT").addEventListener("click",function(){scope="temp";this.classList.add("on");document.getElementById("rgScopeP").classList.remove("on");});
+  document.getElementById("rgScopeP").addEventListener("click",function(){scope="perm";this.classList.add("on");document.getElementById("rgScopeT").classList.remove("on");});
+  document.getElementById("rgCancel").addEventListener("click",closeSheet);
+  document.getElementById("rgSave").addEventListener("click",function(){
+    var mv=parseFloat(document.getElementById("rgMove").value)||500;
+    var ex=parseFloat(document.getElementById("rgExercise").value)||60;
+    var st=parseFloat(document.getElementById("rgStand").value)||8;
+    saveRingGoals({move:mv,exercise:ex,stand:st},scope,dayKey);
+    closeSheet();render();
+  });
+}
+
+/* ═══════════════════════════════════════════
+   WAKE LOCK — keep screen on while app is open
+═══════════════════════════════════════════ */
+var wakeLock=null;
+function requestWakeLock(){
+  if(!('wakeLock' in navigator))return;
+  navigator.wakeLock.request('screen').then(function(wl){
+    wakeLock=wl;
+    wl.addEventListener('release',function(){wakeLock=null;});
+  }).catch(function(){});
+}
+requestWakeLock();
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){requestWakeLock();}
+});
+
+/* ═══════════════════════════════════════════
+   BACKGROUND TIMER — resume timers when app returns from background
+═══════════════════════════════════════════ */
+var _bgHiddenAt=null;
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden'){
+    _bgHiddenAt=Date.now();
+  } else if(document.visibilityState==='visible'&&_bgHiddenAt!==null){
+    var elapsed=Math.floor((Date.now()-_bgHiddenAt)/1000);
+    _bgHiddenAt=null;
+    if(wo.active&&elapsed>0){
+      // Advance rest timer by time away
+      if(wo.restRemaining>0){
+        wo.restRemaining=Math.max(0,wo.restRemaining-elapsed);
+        if(wo.restRemaining<=0){
+          if(wo.restTimerInterval){clearInterval(wo.restTimerInterval);wo.restTimerInterval=null;}
+          wo.restRemaining=0;
+          if(navigator.vibrate)navigator.vibrate([100,50,100]);
+        }
+        renderWorkoutBody();
+      }
+      // Advance active set timers
+      Object.keys(wo.setTimerIntervals).forEach(function(k){
+        wo.setTimers[k]=(wo.setTimers[k]||0)+elapsed;
+        var el=document.querySelector("#woSet_"+k+" .wo-set-timer");
+        if(el)el.textContent=fmtTimer(wo.setTimers[k]);
+      });
+      // Global timer auto-corrects from startTime reference
+      var el2=document.getElementById("woGlobalTimer");
+      if(el2)el2.textContent=fmtTimer(Math.floor((Date.now()-wo.startTime)/1000));
+    }
+  }
+});
+
+/* ═══════════════════════════════════════════
+   FREE UNLOCK BADGE CLICK
+═══════════════════════════════════════════ */
+(function(){
+  var badge=document.getElementById("freeUnlockBadge");
+  if(badge)badge.addEventListener("click",openFreeUnlockPicker);
+})();
+
+render();
+</script>
+</body>
+</html>
